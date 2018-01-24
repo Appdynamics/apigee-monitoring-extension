@@ -1,0 +1,23 @@
+<monitor>
+    <name>Apigee Proxy Performance</name>
+    <type>managed</type>
+    <enabled>true</enabled>
+    <description>Monitors Apigee Proxy Perfancence Metrics</description>
+    <monitor-configuration></monitor-configuration>
+    <monitor-run-task>
+        <name>ApigeeMonitor</name>
+        <display-name>ApigeeMonitor Task Executor</display-name>
+        <description>ApigeeMonitor Task Executor</description>
+        <type>executable</type>
+        <execution-style>periodic</execution-style>
+        <execution-frequency-in-seconds>120</execution-frequency-in-seconds>
+        <execution-timeout-in-secs>120</execution-timeout-in-secs>
+        <task-arguments>
+            <argument name="file_path" is-required="true" default-value="apiproxy.conf"/>
+        </task-arguments>
+        <executable-task>
+            <type>file</type>
+            <file os-type="linux">apigee_monitor.sh</file>
+        </executable-task>
+    </monitor-run-task>
+</monitor>
