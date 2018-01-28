@@ -89,7 +89,7 @@ filtered_req="${base_url}/${organization}/environments/${environments}/stats/api
 &sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
 
 #send the request to Apigee
-IOcURL ${req} #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
+IOcURL "${req}" #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
 
 if [ "${curl_response_code}" -ne 200 ]; then
  msg="The request failed with ${curl_response_code} response code.\n \
