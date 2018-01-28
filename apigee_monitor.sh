@@ -67,14 +67,14 @@ apiproxy_names=$(echo ${apiproxy_names} | sed 's/\(.*\),/\1 /' | awk '{$1=$1}1')
 
 echo "==> Using the following proxies in the filter: \n ${apiproxy_names}"
 
-#Use this if you're on Mac OS
+#Use this if you're using Mac OS
 #minutes_ago=$(date -r $(( $(date +%s) - 600 )) | awk '{print $4}')
 #time_now=$(date +"%T")
 #today=$(date +"%m/%d/%Y")
 #to_range=$(echo ${today}+${time_now})
 #from_range=$(echo ${today}+${minutes_ago})
 
-#or this if you're on GNU - tested on Ubuntu, CentOS and Redhat 
+#or this if you're using Ubuntu, CentOS or Redhat 
 to_range=$(date +%x+%H:%M:%S)
 from_range=$(date +%x+%H:%M:%S --date='10 minutes ago')
 
