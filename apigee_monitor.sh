@@ -14,7 +14,7 @@
 
 #===Update these variables==
 organization=""
-environments=""  #prod|test
+environments="test"  #apigee environment name.
 apigee_username=""
 apigee_password=""
 # onpremise installation API URL is different from cloud, onpremise uses port 8080 i.e
@@ -38,21 +38,13 @@ query_limit=300
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
 apiproxy_names=""
 
-function IOcURL() {
-  local allargs
-  local ix=0
-  # grab the curl args
-  while [ "$1" ]; do
-    allargs[$ix]=$1
-    let "ix+=1"
-    shift
-  done
+IOcURL() {
   [ -z "${curl_output}" ] && curl_output="response.json"
   [ -f "${curl_output}" ] && rm ${curl_output}
-  echo "curl ${allargs[@]}"
+  echo "curl ${1}"
   # for added security, store your password in a file, and cat it like this $(cat .password), otherwise password will be visible in bash history
   # or use -n (.netrc) instead
-  curl_response_code=`curl -u ${apigee_username}:${apigee_password} -s -w "%{http_code}" -o "${curl_output}" "${allargs[@]}"`
+  curl_response_code=$(curl -u ${apigee_username}:${apigee_password} -s -w "%{http_code}" -o "${curl_output}" -X GET "${1}")
   echo "==> ${curl_response_code}"
 }
 
@@ -75,21 +67,16 @@ apiproxy_names=$(echo ${apiproxy_names} | sed 's/\(.*\),/\1 /' | awk '{$1=$1}1')
 
 echo "==> Using the following proxies in the filter: \n ${apiproxy_names}"
 
-time_now=$(date +"%T")
-today=$(date +"%m/%d/%Y")
-
-#having to do this manually since different flavours of unix handle date manipulation differently
-#ref: https://stackoverflow.com/questions/20688664/bash-script-command-to-print-out-date-5-min-before-after
-#60 = 1min, 10mins = 10*60=600
-
 #Use this if you're on Mac OS
 #minutes_ago=$(date -r $(( $(date +%s) - 600 )) | awk '{print $4}')
+#time_now=$(date +"%T")
+#today=$(date +"%m/%d/%Y")
+#to_range=$(echo ${today}+${time_now})
+#from_range=$(echo ${today}+${minutes_ago})
 
-#tested on CentOs, Redhat and Ubuntu
-minutes_ago=$(date --date='10 minutes ago' | awk '{print $4}')
-
-to_range=$(echo ${today}+${time_now})
-from_range=$(echo ${today}+${minutes_ago})
+#or this if you're on GNU - tested on Ubuntu, CentOS and Redhat 
+to_range=$(date +%x+%H:%M:%S)
+from_range=$(date +%x+%H:%M:%S --date='10 minutes ago')
 
 echo "==> from ${from_range} to ${to_range}"
 
@@ -102,7 +89,7 @@ filtered_req="${base_url}/${organization}/environments/${environments}/stats/api
 &sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
 
 #send the request to Apigee
-IOcURL -X GET ${req} #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
+IOcURL "${req}" #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
 
 if [ "${curl_response_code}" -ne 200 ]; then
  msg="The request failed with ${curl_response_code} response code.\n \
@@ -148,12 +135,12 @@ fi
     | $identifier, $avg_response_time,$request_processing_latency,$target_processing_latency
     '< ${curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_response.out
 
-  #Note;
-  #a=identifier
-  #b=aveg response time
-  #c=request processng latency
-  #d=target processing latency
 #tranpose the matrix of the metrics
+#a=identifier
+#b=aveg response time
+#c=request processng latency
+#d=target processing latency
+
 awk 'NF>0{a=$0;getline b; getline c; getline d; print a FS b FS c FS d}' jq_processed_response.out > metrified_response.out
 
 while read -r response_content ; do
