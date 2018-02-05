@@ -1,9 +1,9 @@
 # Apigee Monitoring Extension for AppDynamics #
- #### For use with Apigee Edge on SaaS and on premise ####
+ #### For use with Apigee Edge on SaaS and on-premise ####
  
 ## Use Case ###
 
-Apigee is an API management platform that enables developers and businesses to design, secure, deploy, monitor, and scale APIs. This exetension makes it possible for AppDynamics customers to monitor the performance of Apigee API proxies (or services as some people prefer to call it) in AppDynamics. The Apigee metrics in AppDynamics will help customers to quickly isolate the root cause of a performance issue - whether it's  Apigee's overahead and/or the backend (target) service.  
+Apigee is an API management platform that enables developers and businesses to design, secure, deploy, monitor, and scale APIs. This extension makes it possible for AppDynamics customers to monitor the performance of Apigee API proxies (or services as some people prefer to call it).Apigee performance metrics in AppDynamics will help customers to quickly isolate the root cause of a performance issue - whether it is Apigee's overhead and/or the backend (target) service.  
 
 **Metrics** that are collected for each API proxy are : 
 
@@ -13,7 +13,7 @@ Apigee is an API management platform that enables developers and businesses to d
 
 ## Prerequisite ###
 1. This extension works only with the standalone Java machine agent. 
-2. Create a service account in Apigee that has read access to all ALL the api proxies you would like to monitor in AppDynamics 
+2. Create a service account in Apigee that has read access to all ALL the API proxies you would like to monitor in AppDynamics 
 3. jq must be installed on the server running the machine agent - https://stedolan.github.io/jq/download/ 
 
 ### Installation ###
@@ -26,7 +26,7 @@ Apigee is an API management platform that enables developers and businesses to d
 * host_name
 3. Make the script executable:  `chmod +x apigee_monitor.sh` 
 4. Test it: `./apigee_monitor.sh`
-5. If everything is OK, you should see a similar output in stdout: 
+5. If everything is OK, you should see an output in stdout that is similar to this: 
    
 >     ==> from 01/23/2018+22:53:40 to 01/23/2018+23:03:40 
 >        curl -X GET   https://api.enterprise.apigee.com/v1/organizations/io/environments/test/stats/apiproxy?_optimized=js&realtime=true&limit=300&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=01/23/2018+22:53:40~01/23/2018+23:03:40&timeUnit=minute&tsAscending=true
@@ -40,7 +40,7 @@ Apigee is an API management platform that enables developers and businesses to d
 6. Restart the machine agent 
 
 ###  Custom Dashboard ###
-The custom dashboard below shows 2 api proxy performance metrics - with their respctive SLAs 
+The custom dashboard below shows 2 API proxy performance metrics - with their respective SLAs 
 
 <img src="https://user-images.githubusercontent.com/2548160/35309120-a9c619bc-00a2-11e8-9713-64d6e9e05381.png" alt="Dash" height="230" width="850"/>
 
