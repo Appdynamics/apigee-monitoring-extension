@@ -75,8 +75,8 @@ echo "==> Using the following proxies in the filter: \n ${apiproxy_names}"
 #from_range=$(echo ${today}+${minutes_ago})
 
 #or this if you're using Ubuntu, CentOS or Redhat 
-to_range=$(date +%x+%H:%M:%S)
-from_range=$(date +%x+%H:%M:%S --date='10 minutes ago')
+to_range=$(date +%m/%d/%Y+%H:%M:%S)
+from_range=$(date +%m/%d/%Y+%H:%M:%S --date='10 minutes ago')
 
 echo "==> from ${from_range} to ${to_range}"
 
