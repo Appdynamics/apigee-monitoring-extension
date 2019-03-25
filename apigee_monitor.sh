@@ -58,7 +58,7 @@ fi
 
 #read proxy names from the conf file
 while read -r proxy_name ; do
-	#concatenate  proxy_names - seperated by commas and put them in between single qoutes ''
+	#concatenate  proxy_names - separated by commas and put them in between single quotes ''
 	apiproxy_names="${apiproxy_names}'${proxy_name}',"
 done < "${proxy_conf_file_path}"
 
@@ -101,7 +101,7 @@ if [ "${curl_response_code}" -ne 200 ]; then
 fi
 
 if [ ! -f "${curl_output}" ]; then
-  msg="The output of the cURL request wasn't saved. please ensure that $(whoami) user has write acccess to $(pwd). Exiting..."
+  msg="The output of the cURL request wasn't saved. please ensure that $(whoami) user has write access to $(pwd). Exiting..."
   echo "${msg}"
   echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg}" >> ${log_path}
   exit 1
@@ -110,7 +110,7 @@ fi
 #check if identifier string is present in the output
 if ! grep -q identifier "${curl_output}"; then
   msg="The request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
-  Please make sure there are traffic - from ${from_range} to ${to_range}"
+  Please make sure there is data in Apigee Analytics - from ${from_range} to ${to_range}"
   echo "${msg}"
   echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] $msg" >> ${log_path}
   exit 1
