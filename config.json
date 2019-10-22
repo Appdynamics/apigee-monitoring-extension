@@ -1,0 +1,21 @@
+{
+  "connection_details": [
+    {
+      "hostName": "https://api.enterprise.apigee.com",
+      "org": "iogb-70-eval",
+      "env": "test",
+      "server_friendly_name": "SaaS-Test",
+      "username": "user_name",
+      "password": "password"
+    },
+     {
+      "hostName": "https://onpremise.enterprise.apigee.com",
+      "org": "iogb-70-eval",
+      "env": "prod",
+      "server_friendly_name": "Onpremise-prod",
+      "username": "user",
+      "password": "password"
+    }
+  ]
+
+}
