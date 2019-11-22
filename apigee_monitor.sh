@@ -38,7 +38,7 @@ IOcURL() {
   [ -z "${curl_output}" ] && curl_output="response.json"
   [ -f "${curl_output}" ] && rm ${curl_output}
   
-  echo "curl ${1} -u ${2}:${3}"
+  echo "curl ${1} -u ${2}:******"
 
   # for added security, store your password in a file, and cat it like this $(cat .password), otherwise password will be visible in bash history
   # or use -n (.netrc) instead
