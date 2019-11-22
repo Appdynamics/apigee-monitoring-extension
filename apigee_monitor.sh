@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Author : Israel.Ogbole@appdynamics.com
-
+version="[ApigeeMonitore v2.0.0 Build Date 2019-11-22 12:59]"
 #This extension sends the following Apigee metrics to AppDynamics
 
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
@@ -28,6 +28,7 @@ proxy_conf_file_path="apiproxy.conf"
 apigee_conf_file="config.json"
 log_path="../../logs/apigee-monitor.log"
 
+
 real_time=true
 query_limit=300
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
@@ -47,6 +48,9 @@ IOcURL() {
   
   echo "==> ${curl_response_code}"
 }
+
+#Initialise log with version
+echo "{$version}" >> ${log_path}
 
 if [ ! -f "${proxy_conf_file_path}" ]; then
     msg="${proxy_conf_file_path} does not exist. \n This file is required for this extension to work.\
