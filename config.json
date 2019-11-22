@@ -6,6 +6,7 @@
       "env": "test",
       "server_friendly_name": "SaaS-Test",
       "username": "user_name",
+      "use_proxy_filter":"false"
       "password": "password"
     },
      {
@@ -13,6 +14,7 @@
       "org": "iogb-70-eval",
       "env": "prod",
       "server_friendly_name": "Onpremise-prod",
+      "use_proxy_filter":"false"
       "username": "user",
       "password": "password"
     }
