@@ -105,9 +105,8 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
      server_friendly_name=$(echo ${host_name} | sed 's~http[s]*://~~g')
    fi 
 
-   #TODO - remove username and password from this echo
    echo "===> Processing host_name:${host_name} ~~ env:${environments}  ~~ org:${organization} ~  \
-   server_friendly_name : ${server_friendly_name} ~ username : ${username}  ~ password : ${password}  "
+   server_friendly_name : ${server_friendly_name} ~ username : ${username}  ~ password : ****** "
 
    base_url="${host_name}/v1/organizations"
 
@@ -121,9 +120,8 @@ filtered_req="${base_url}/${organization}/environments/${environments}/stats/api
 
   #send the request to Apigee
   #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
-  echo "here....  ${req}" "${username}":"${password} "
-   IOcURL "${req}" "${username}":"${password}"   
-
+  echo "sending request to Apigee....  ${req}" "${username}":"******"
+  IOcURL "${req}" "${username}" "${password}"   
 
    if [ "${curl_response_code}" -ne 200 ]; then
       msg="The request failed with ${curl_response_code} response code.\n \
