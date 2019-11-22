@@ -18,12 +18,10 @@ Apigee is an API management platform that enables developers and businesses to d
 
 ### Installation ###
 1. Unzip the attached file into $MACHINE_AGENT_HOME/monitors 
-2. Using your favourite text editor, open apigee_monitor.sh and fill in these variables
-* apigee_username
-* apigee_password 
-* organization
-* environments
-* host_name
+2. Using your favourite text editor, open config.json and fill in the connection details
+
+*Note: user_proxy_filter, when set to true will ONLY send API performance metrics for the predefined proxies in the apiproxy.conf file. if set to false, performance data for ALL apigee proxies will be sent.* 
+
 3. Make the script executable:  `chmod +x apigee_monitor.sh` 
 4. Test it: `./apigee_monitor.sh`
 5. If everything is OK, you should see an output in stdout that is similar to this: 
