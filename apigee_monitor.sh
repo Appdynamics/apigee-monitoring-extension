@@ -83,7 +83,7 @@ echo "==> Using the following proxies in the filter: \n ${apiproxy_names}"
 
 #or this if you're using Ubuntu, CentOS or Redhat 
 to_range=$(date +%m/%d/%Y+%H:%M:%S)
-from_range=$(date +%m/%d/%Y+%H:%M:%S --date='10 minutes ago')
+from_range=$(date +%m/%d/%Y+%H:%M:%S --date='5 minutes ago')
 
 echo "==> from ${from_range} to ${to_range}"
 
@@ -120,8 +120,15 @@ filtered_req="${base_url}/${organization}/environments/${environments}/stats/api
 
   #send the request to Apigee
   #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
-  echo "sending request to Apigee....  ${req}" "${username}":"******"
-  IOcURL "${req}" "${username}" "${password}"   
+  echo "sending request to Apigee.... " 
+
+ if [ "${use_proxy_filter}" = "true" ]; then
+   echo "Using filtered request"
+   IOcURL "${filtered_req}" "${username}" "${password}"   
+  else
+    echo "Using un-filtered request - collecting all proxy information"
+   IOcURL "${req}" "${username}" "${password}"   
+ fi
 
    if [ "${curl_response_code}" -ne 200 ]; then
       msg="The request failed with ${curl_response_code} response code.\n \
