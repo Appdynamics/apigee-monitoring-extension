@@ -13,6 +13,7 @@ Apigee is an API management platform that enables developers and businesses to d
 
 ## Prerequisite ###
 1. This extension works only with the standalone Java machine agent. 
+2. Analytics module must be enabled in Apigee 
 2. Create a service account in Apigee that has read access to all ALL the API proxies you would like to monitor in AppDynamics 
 3. jq must be installed on the server running the machine agent - https://stedolan.github.io/jq/download/ 
 
@@ -20,7 +21,8 @@ Apigee is an API management platform that enables developers and businesses to d
 1. Unzip the attached file into $MACHINE_AGENT_HOME/monitors 
 2. Using your favourite text editor, open config.json and fill in the connection details
 
-*Note: user_proxy_filter, when set to true will ONLY send API performance metrics for the predefined proxies in the apiproxy.conf file. if set to false, performance data for ALL apigee proxies will be sent.* 
+  *Note: user_proxy_filter, when set to true will ONLY send API performance metrics for the predefined proxies in the
+   apiproxy.conf file. if set to false, performance data for ALL apigee proxies will be sent.* 
 
 3. Make the script executable:  `chmod +x apigee_monitor.sh` 
 4. Test it: `./apigee_monitor.sh`
@@ -49,7 +51,12 @@ Metrics are located in Application Infrastructure Performance | Tier_NAME| Custo
 
 ### Troubleshooting ###
 
-review $MACHINE_AGENT_HOME/logs/apigee-monitor.log 
+
+Review $MACHINE_AGENT_HOME/logs/apigee-monitor.log 
+
+Send a manaul curl request to your apigee instance to verify it's working 
+
+
 
 ### Contribution guidelines ###
 
