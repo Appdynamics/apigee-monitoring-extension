@@ -144,7 +144,7 @@ filtered_req="${base_url}/${organization}/environments/${environments}/stats/api
    fi
 
    if [ ! -f "${curl_output}" ]; then
-     msg="The output of the cURL request wasn't saved. please ensure that $(whoami) user has write acccess to $(pwd). Exiting..."
+     msg="The output of the cURL request wasn't saved. Please ensure that $(whoami) user has write acccess to $(pwd). Exiting..."
      echo "${msg}"
      echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg}" >> ${log_path}
      exit 1
@@ -155,8 +155,8 @@ filtered_req="${base_url}/${organization}/environments/${environments}/stats/api
      msg="The request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
      Please make sure there are traffic - from ${from_range} to ${to_range}"
      echo "${msg}"
-     echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] $msg" >> ${log_path}
-     exit 1
+     echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >> ${log_path}
+     exit 0
    fi
 
    #now it's time for the fun bit that I always dread:)
