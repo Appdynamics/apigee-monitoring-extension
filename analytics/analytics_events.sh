@@ -1,5 +1,6 @@
 #!/bin/sh
 
+#Send Analytics Events to AppD
 schema_name="apigee_error_codes"
 schema_template="analytics/schema.json"
 markerfile="analytics/${schema_name}.schema.markerfile"

@@ -282,7 +282,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
     #Send anaytics events 
     if (${enable_biq} -eq "true"); then 
        echo "BiQ is enabled, sending analytics events "
-       source ./analytics/analytics.sh
+       source ./analytics/analytics_events.sh
     fi
    #end if host_url not null
    fi
