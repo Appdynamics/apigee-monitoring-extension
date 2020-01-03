@@ -1,0 +1,8 @@
+{
+    "schema": {
+        "apiproxy": "string",
+        "response_status_code": "string",
+        "target_response_code": "string"
+    }
+}
+

@@ -1,23 +1,31 @@
 {
-  "connection_details": [
+ "connection_details": [
     {
-      "hostName": "https://api.enterprise.apigee.com",
-      "org": "iogb-70-eval",
-      "env": "test",
-      "server_friendly_name": "SaaS-Test",
-      "username": "user_name",
-      "use_proxy_filter": "false",
-      "password": "password"
-    },
-     {
-      "hostName": "https://onpremise.enterprise.apigee.com",
-      "org": "iogb-70-eval",
+      "host_url": "https://api.enterprise.apigee.com",
+      "org": "israelo-70230-eval",
       "env": "prod",
-      "server_friendly_name": "Onpremise-prod",
-      "use_proxy_filter": "true",
-      "username": "user",
+      "server_friendly_name": "SaaS",
+      "username": "username",
+      "use_proxy_filter": false,
+      "password": "userpassword"
+    },
+    {
+      "host_url": "https://localhost:8080",
+      "org": "customer1",
+      "env": "test",
+      "server_friendly_name": "Onpremise-Sever001-DC1",
+      "username": "username",
+      "use_proxy_filter": true,
       "password": "password"
     }
-  ]
+  ],
 
+  "enable_BiQ": true,
+  "analytics_details":[
+    {
+      "analytics_endpoint":"https://analytics.api.appdynamics.com",
+      "global_account_name":"customer1_GUID",
+      "analytics_key":"Generated analytics key"
+    }
+  ]
 }
