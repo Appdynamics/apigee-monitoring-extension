@@ -24,6 +24,8 @@
   "analytics_details":[
     {
       "analytics_endpoint":"https://analytics.api.appdynamics.com",
+      "proxy_url":"",
+      "proxy_port":"",
       "global_account_name":"customer1_GUID",
       "analytics_key":"Generated analytics key"
     }

@@ -27,16 +27,16 @@ version="[ApigeeMonitore v2.5.0 Build Date 2020-01-08 12:59]"
 
 #This will create metrics in specific Tier/Component. Make sure to replace <tier_id> with the appropriate one from your environment.
 #To find the tier_id in your environment, please follow the screenshot https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java?preview=/34272441/34413993/componentid.png
-#metric_prefix="Server|Component:<tier_id>|Custom Metrics|Apigee|${environments}"
-
+#metric_prefix="Server|Component:<tier-name>|Custom Metrics|Apigee"
 #This will create metrics in all tiers of your business application
 metric_prefix="Custom Metrics|Apigee"
 metric_base="Proxies"
 proxy_conf_file_path="apiproxy.conf"
-apigee_conf_file="config.json"
+apigee_conf_file="testconfig.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
+query_interval=2 #in minutues. This value must be the same as the execution frequency value set in the monitor.xml file
 query_limit=120
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
 apiproxy_names=""
@@ -97,7 +97,7 @@ echo "==> Will use the following proxies if 'use_proxy_filter' is set to true in
 
 #or this if you're using Ubuntu, CentOS or Redhat 
 to_range=$(date +%m/%d/%Y+%H:%M:%S)
-from_range=$(date +%m/%d/%Y+%H:%M:%S --date='5 minutes ago')
+from_range=$(date +%m/%d/%Y+%H:%M:%S --date="$query_interval minutes ago")
 
 echo "==> Time range: from ${from_range} to ${to_range}"
 
