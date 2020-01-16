@@ -4,3 +4,4 @@ analytics/analytics_events.txt
 response.json
 analytics/schema.markerfile
 testconfig.json
+*.sh

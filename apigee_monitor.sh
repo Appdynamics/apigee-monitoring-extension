@@ -32,7 +32,7 @@ version="[ApigeeMonitore v2.5.0 Build Date 2020-01-08 12:59]"
 metric_prefix="Custom Metrics|Apigee"
 metric_base="Proxies"
 proxy_conf_file_path="apiproxy.conf"
-apigee_conf_file="config.json"
+apigee_conf_file="testconfig.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
@@ -164,128 +164,128 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
 
         #check if identifier string is present in the output
         if ! grep -q identifier "${curl_output}"; then
-          msg="The request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
-          Please make sure there is traffic - from ${from_range} to ${to_range}"
-          echo "${msg}"
-          echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >> ${log_path}
-          exit 0
-        fi
+              msg="The request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
+              Please make sure there is traffic - from ${from_range} to ${to_range}"
+              echo "${msg}"
+              echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >> ${log_path}
+              msg="Skipping response processing for host_name:${host_name} ~~ env:${environments}  ~~ org:${organization}"
+              echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >> ${log_path}
+              echo "${msg}"
+          else 
+            #now it's time for the fun bit that I always dread:)
+              jq  -r '
+                .[].stats.data[]
+                | (.identifier.values[0]) as $identifier
+                | (.metric[]
+                    | select(.name == "global-avg-total_response_time")
+                    | .values
+                    )  as $global_avg_total_response_time
+                | (.metric[]
+                    | select(.name == "global-avg-request_processing_latency")
+                    | .values
+                    ) as $global_avg_request_processing_latency
+                  | (.metric[]
+                      | select(.name == "global-avg-target_response_time")
+                      | .values
+                      ) as $global_avg_target_response_time
+                  | (.metric[]
+                      | select(.name == "sum(message_count)")
+                      | .values
+                      ) as $message_count
+                  | (.metric[]
+                      | select(.name == "sum(is_error)")
+                      | .values
+                      ) as $error_count
+                  | (.metric[]
+                      | select(.name == "avg(total_response_time)")
+                      | .values
+                      ) as $avg_total_response_time
+                  | (.metric[]
+                      | select(.name == "avg(target_response_time)")
+                      | .values
+                      ) as $avg_target_response_time
+                  | (.metric[]
+                      | select(.name == "avg(request_processing_latency)")
+                      | .values
+                      ) as $avg_request_processing_latency
+                | $identifier, $global_avg_total_response_time, $global_avg_request_processing_latency,$global_avg_target_response_time,
+                ($message_count | add),($error_count | add),($avg_total_response_time | add)/ ($avg_total_response_time | length),
+                ($avg_target_response_time | add)/ ($avg_target_response_time | length),
+                ($avg_request_processing_latency | add)/ ($avg_request_processing_latency | length)
+              '< ${curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_response.out
 
-        #now it's time for the fun bit that I always dread:)
-          jq  -r '
-            .[].stats.data[]
-            | (.identifier.values[0]) as $identifier
-            | (.metric[]
-                | select(.name == "global-avg-total_response_time")
-                | .values
-                )  as $global_avg_total_response_time
-            | (.metric[]
-                | select(.name == "global-avg-request_processing_latency")
-                | .values
-                ) as $global_avg_request_processing_latency
-              | (.metric[]
-                  | select(.name == "global-avg-target_response_time")
-                  | .values
-                  ) as $global_avg_target_response_time
-              | (.metric[]
-                  | select(.name == "sum(message_count)")
-                  | .values
-                  ) as $message_count
-              | (.metric[]
-                  | select(.name == "sum(is_error)")
-                  | .values
-                  ) as $error_count
-              | (.metric[]
-                  | select(.name == "avg(total_response_time)")
-                  | .values
-                  ) as $avg_total_response_time
-              | (.metric[]
-                  | select(.name == "avg(target_response_time)")
-                  | .values
-                  ) as $avg_target_response_time
-              | (.metric[]
-                  | select(.name == "avg(request_processing_latency)")
-                  | .values
-                  ) as $avg_request_processing_latency
-            | $identifier, $global_avg_total_response_time, $global_avg_request_processing_latency,$global_avg_target_response_time,
-            ($message_count | add),($error_count | add),($avg_total_response_time | add)/ ($avg_total_response_time | length),
-            ($avg_target_response_time | add)/ ($avg_target_response_time | length),
-            ($avg_request_processing_latency | add)/ ($avg_request_processing_latency | length)
-          '< ${curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_response.out
+              #1.Processing Performance metrics outputs. 
+              
+              #tranpose the matrix of the metrics 
+              #a=identifier
+              #b=global-avg-total_response_time
+              #c=global-avg-request_processing_latency
+              #d=global-avg-request_processing_latency
+              #additional metrics - 19/12/2019 
+              #e=message_count
+              #f=error_count
+              #g=avg_total_response_time
+              #h=avg_target_response_time
+              #i=avg_request_processing_latency
+            
+            awk 'NF>0{a=$0;getline b; getline c; getline d; getline e; getline f; getline g; getline h; getline i;
+                  print a FS b FS c FS d FS e FS f FS g FS h FS i}' jq_processed_response.out > metrified_response.out
 
-          #1.Processing Performance metrics outputs. 
+            while read -r response_content ; do
+                identifier=$(echo ${response_content} | awk '{print $1}')
+                #round the values up to highest or lowest int->awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}'
+                global_avg_total_response_time=$(echo ${response_content}  | awk '{print $2}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                global_avg_request_processing_latency=$(echo ${response_content}  | awk '{print $3}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                global_avg_target_response_time=$(echo ${response_content}  | awk '{print $4}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                #additional metrics - 19/12/2019 
+                message_count=$(echo ${response_content}  | awk '{print $5}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                error_count=$(echo ${response_content}  | awk '{print $6}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                avg_total_response_time=$(echo ${response_content}  | awk '{print $7}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                avg_target_response_time=$(echo ${response_content}  | awk '{print $8}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                avg_request_processing_latency=$(echo ${response_content}  | awk '{print $9}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                
+                #parameterising the paths to make it easier to manager in the future
+                name_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}|${identifier}"
+                
+                echo "$name_path|Availability, value=1"
+                echo "$name_path|Total Message Count, value=${message_count}"
+                echo "$name_path|Total Error Count, value=${error_count}"
+                echo "$name_path|Global Average Response Time, value=${global_avg_total_response_time}"
+                echo "$name_path|Global Request Processing Latency, value=${global_avg_request_processing_latency}"
+                echo "$name_path|Global Average Target Response Time, value=${global_avg_target_response_time}"
+                echo "$name_path|Average Total Response Time, value=${avg_total_response_time}"
+                echo "$name_path|Average Target Response Time, value=${avg_target_response_time}"
+                echo "$name_path|Average Request Processing Latency, value=${avg_request_processing_latency}"
+            done < metrified_response.out
+
+          #2.Processing HTTP Status Code Response Codes 
+          jq -r  '.[].stats.data[]
+          | [.identifier.values]
+          | "\(.[0]) "
+          ' < ${curl_output} | sed 's/"//g;s/[][]//g;s/,/ /g' >  jq_processed_status_code.out
+
+          #jq_processed_status_code.out file format is is :
+          # identifier[space]response_status_code[space]target_response_code"
+          while read -r status_codes ; do
+              identifier=$(echo ${status_codes} | awk '{print $1}')
+              response_status_code=$(echo ${status_codes} | awk '{print $2}')
+              target_response_code=$(echo ${status_codes} | awk '{print $3}')
+              name_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}|${identifier}"
+              echo "$name_path|Response Status Code|${response_status_code}, value=1"
+              echo "$name_path|Target Response Code|${target_response_code}, value=1"
+          done < jq_processed_status_code.out
           
-          #tranpose the matrix of the metrics 
-          #a=identifier
-          #b=global-avg-total_response_time
-          #c=global-avg-request_processing_latency
-          #d=global-avg-request_processing_latency
-          #additional metrics - 19/12/2019 
-          #e=message_count
-          #f=error_count
-          #g=avg_total_response_time
-          #h=avg_target_response_time
-          #i=avg_request_processing_latency
-        
-        awk 'NF>0{a=$0;getline b; getline c; getline d; getline e; getline f; getline g; getline h; getline i;
-              print a FS b FS c FS d FS e FS f FS g FS h FS i}' jq_processed_response.out > metrified_response.out
+            #clean up, but leave response.json to help troubleshoot any issues with this script and/or Apigee's response
+          rm jq_processed_response.out metrified_response.out jq_processed_status_code.out
 
-        while read -r response_content ; do
-            identifier=$(echo ${response_content} | awk '{print $1}')
-            #round the values up to highest or lowest int->awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}'
-            global_avg_total_response_time=$(echo ${response_content}  | awk '{print $2}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            global_avg_request_processing_latency=$(echo ${response_content}  | awk '{print $3}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            global_avg_target_response_time=$(echo ${response_content}  | awk '{print $4}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            #additional metrics - 19/12/2019 
-            message_count=$(echo ${response_content}  | awk '{print $5}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            error_count=$(echo ${response_content}  | awk '{print $6}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            avg_total_response_time=$(echo ${response_content}  | awk '{print $7}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            avg_target_response_time=$(echo ${response_content}  | awk '{print $8}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            avg_request_processing_latency=$(echo ${response_content}  | awk '{print $9}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-            
-            #parameterising the paths to make it easier to manager in the future
-            name_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}|${identifier}"
-            
-            echo "$name_path|Availability, value=1"
-            echo "$name_path|Total Message Count, value=${message_count}"
-            echo "$name_path|Total Error Count, value=${error_count}"
-            echo "$name_path|Global Average Response Time, value=${global_avg_total_response_time}"
-            echo "$name_path|Global Request Processing Latency, value=${global_avg_request_processing_latency}"
-            echo "$name_path|Global Average Target Response Time, value=${global_avg_target_response_time}"
-            echo "$name_path|Average Total Response Time, value=${avg_total_response_time}"
-            echo "$name_path|Average Target Response Time, value=${avg_target_response_time}"
-            echo "$name_path|Average Request Processing Latency, value=${avg_request_processing_latency}"
-         done < metrified_response.out
+            #Send anaytics events 
+            if (${enable_biq} -eq "true"); then 
+              echo "BiQ is enabled, sending analytics events "
+              source ./analytics/analytics_events.sh
+            fi
+    fi # end check if identifier string is present in the output
+   
+   fi #end if host_url not null
 
-      #2.Processing HTTP Status Code Response Codes 
-      jq -r  '.[].stats.data[]
-      | [.identifier.values]
-      | "\(.[0]) "
-      ' < ${curl_output} | sed 's/"//g;s/[][]//g;s/,/ /g' >  jq_processed_status_code.out
-
-      #jq_processed_status_code.out file format is is :
-      # identifier[space]response_status_code[space]target_response_code"
-      while read -r status_codes ; do
-          identifier=$(echo ${status_codes} | awk '{print $1}')
-          response_status_code=$(echo ${status_codes} | awk '{print $2}')
-          target_response_code=$(echo ${status_codes} | awk '{print $3}')
-
-          name_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}|${identifier}"
-
-          echo "$name_path|Response Status Code|${response_status_code}, value=1"
-          echo "$name_path|Target Response Code|${target_response_code}, value=1"
-      done < jq_processed_status_code.out
-      
-        #clean up, but leave response.json to help troubleshoot any issues with this script and/or Apigee's response
-     rm jq_processed_response.out metrified_response.out jq_processed_status_code.out
-
-    #Send anaytics events 
-    if (${enable_biq} -eq "true"); then 
-       echo "BiQ is enabled, sending analytics events "
-       source ./analytics/analytics_events.sh
-    fi
-   #end if host_url not null
-   fi
- #end config.json loop
-done
+done  #end config.json loop
  

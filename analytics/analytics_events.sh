@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Send Analytics Events to AppD
-schema_name="apigee_error_codes"
+schema_name="apigee_response_codes"
 schema_template="analytics/schema.json"
 markerfile="analytics/schema.markerfile"
 
@@ -57,7 +57,7 @@ fi
  )
 
 payload="[${processed_analytics}]"
-curl_response_code=$(curl -v -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type: application/vnd.appd.events+json;v=2" -d "${payload}" -s -w "%{http_code}" $proxy_details)
+curl_response_code=$(curl -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type: application/vnd.appd.events+json;v=2" -d "${payload}" -s -w "%{http_code}" $proxy_details)
 
 echo "response code = $curl_response_code" 
 
