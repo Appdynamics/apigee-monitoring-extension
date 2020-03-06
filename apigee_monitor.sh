@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Author : Israel.Ogbole@appdynamics.com
-version="[ApigeeMonitore v2.5.0 Build Date 2020-01-08 12:59]"
+version="[ApigeeMonitore v2.6.0 Build Date 2020-03-04 12:59]"
 
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
@@ -36,27 +36,52 @@ apigee_conf_file="testconfig.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
-query_interval=2 #in minutues. This value must be the same as the execution frequency value set in the monitor.xml file
+query_interval=1 #in minutues. This value must be the same as the execution frequency value set in the monitor.xml file
 query_limit=120
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
 apiproxy_names=""
+#dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,client_id,ax_resolved_client_ip,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,virtual_host,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,proxy_client_ip,ax_true_client_ip,client_ip,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,target_ip,target_url,x_forwarded_for_ip,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_dn_region,ax_dn_region,client_ip"
+dimensions="apiproxy"
+
+metric_curl_output="metric_response.json"
+fourxx_curl_output="4xx_response.json"
+fivexx_curl_output="5xx_response.json"
+
+ #initialize reponse codes
+
+fourxx_curl_response_code=""
+fivexx_curl_response_code=""
+metric_curl_response_code=""
+
+merged_metric_file="merged_metric_file.out"
+
+found_4xx="false"
+found_5xx="false"
+ 
+#dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_geo_timezone,ax_week_of_month,ax_geo_country,ax_geo_region,ax_geo_continent,ax_dn_region,client_ip"
+
+#dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,ax_resolved_client_ip,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,virtual_host,client_ip,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,proxy_client_ip,ax_true_client_ip,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,target_ip,target_url,x_forwarded_for_ip,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_geo_timezone,ax_week_of_month,,ax_geo_country,ax_geo_region,ax_geo_continent,ax_dn_region"
 
 #takes 3 params in this order 1. requst url 2. username 3. password
 IOcURL() {
  #clean up any orphaned file from the previous run. 
  #rm jq_processed_response.out metrified_response.out jq_processed_status_code.out
-
-  [ -z "${curl_output}" ] && curl_output="response.json"
-  [ -f "${curl_output}" ] && rm ${curl_output}
-  
+  [ -f "${4}" ] && rm ${4}
+  echo ""
   echo "curl ${1} -u ${2}:******"
-
+  echo ""
   # for added security, store your password in a file, and cat it like this $(cat .password), otherwise password will be visible in bash history
   # or use -n (.netrc) instead
-  #curl_response_code=$(curl -u ${apigee_username}:${apigee_password} -s -w "%{http_code}" -o "${curl_output}" -X GET "${1}")
-  curl_response_code=$(curl -u ${2}:${3} -s -w "%{http_code}" -o "${curl_output}" -X GET "${1}")
-  
-  echo "==> ${curl_response_code}"
+  #metric_curl_response_code=$(curl -u ${apigee_username}:${apigee_password} -s -w "%{http_code}" -o "${metric_curl_output}" -X GET "${1}")
+  response=$(curl -u ${2}:${3} -s -w "%{http_code}" -o "${4}" -X GET "${1}")
+}
+
+IOFileJoiner() {
+  # arg {1} = file2 - the smaller content, {2} = file 1 the super set file, {3} = output
+  awk '
+  NR==FNR{ a[$1]=$2; next }
+  { print $0, ($1 in a ? a[$1] : 0) }
+' ${1} ${2} > ${3}
 }
 
 #Initialise log with version
@@ -129,9 +154,16 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
 
       base_url="${host_name}/v1/organizations"
 
-      req="${base_url}/${organization}/environments/${environments}/stats/apiproxy,response_status_code,target_response_code?_optimized=js&realtime=${real_time}&limit=${query_limit}&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
+      fourxx="&filter=(response_status_code%20ge%20400%20and%20response_status_code%20le%20499)"
+      fivexx="&filter=(response_status_code%20ge%20500%20and%20response_status_code%20le%20599)"
       
-      filtered_req="${base_url}/${organization}/environments/${environments}/stats/apiproxy,response_status_code,target_response_code?_optimized=js&realtime=${real_time}&filter=(apiproxy%20in%20${apiproxy_names})&limit=${query_limit}&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
+      fourxx_proxy_filter="&filter=(apiproxy%20in%20${apiproxy_names}%20and%20response_status_code%20ge%20400%20and%20response_status_code%20le%20499)"
+      fivexx_proxy_filter="&filter=(apiproxy%20in%20${apiproxy_names}%20and%20response_status_code%20ge%20500%20and%20response_status_code%20le%20599)"
+      proxy_filter="&filter=(apiproxy%20in%20${apiproxy_names})"
+      
+      req="${base_url}/${organization}/environments/${environments}/stats/${dimensions}?_optimized=js&realtime=${real_time}&limit=${query_limit}&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
+      
+      #proxy_filter_req="${base_url}/${organization}/environments/${environments}/stats/${dimensions}?_optimized=js&realtime=${real_time}&limit=${query_limit}&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
 
       #https://api.enterprise.apigee.com/v1/organizations/iogbole-70230-eval/environments/prod/stats/apiproxy,response_status_code,target_response_code?_optimized=js&select=sum(message_count),sum(is_error),avg(total_response_time),avg(target_response_time)&sort=DESC&sortby=sum(message_count),sum(is_error),avg(total_response_time),avg(target_response_time)&timeRange=12/18/2019+00:00:15~12/19/2019+00:50:15"
         #send the request to Apigee
@@ -140,30 +172,52 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
 
       if [ "${use_proxy_filter}" = "true" ]; then
           echo "Using filtered request"
-          IOcURL "${filtered_req}" "${username}" "${password}"   
+          echo "Metric request.."
+          IOcURL "${req}${proxy_filter}" "${username}" "${password}" ${metric_curl_output} 
+          metric_curl_response_code=${response}
+          echo "metric_curl_response_code==>$metric_curl_response_code"
+          echo "4xx  request..."
+          IOcURL "${req}${fourxx_proxy_filter}" "${username}" "${password}" ${fourxx_curl_output}
+          fourxx_curl_response_code=${response}
+          echo "fourxx_curl_response_code==> ${fourxx_curl_response_code}"
+          echo "5xx request..."
+          IOcURL "${req}${fivexx_proxy_filter}" "${username}" "${password}" ${fivexx_curl_output} 
+          fivexx_curl_response_code=${response}
+          echo "fivexx_curl_response_code==>${fivexx_curl_response_code}"
         else
           echo "Using un-filtered request - collecting all proxy information"
-          IOcURL "${req}" "${username}" "${password}"   
+          echo "Metric request.."
+          IOcURL "${req}" "${username}" "${password}" ${metric_curl_output} 
+          metric_curl_response_code=${response}
+          echo "metric_curl_response_code==>$metric_curl_response_code"
+          echo "4xx  request..."
+          IOcURL "${req}${fourxx}" "${username}" "${password}" ${fourxx_curl_output}
+          fourxx_curl_response_code=${response}
+          echo "fourxx_curl_response_code==> ${fourxx_curl_response_code}"
+          echo "5xx request..."
+          IOcURL "${req}${fivexx}" "${username}" "${password}" ${fivexx_curl_output} 
+          fivexx_curl_response_code=${response}
+          echo "fivexx_curl_response_code==>${fivexx_curl_response_code}"
       fi
-
-        if [ "${curl_response_code}" -ne 200 ]; then
-            msg="The request failed with ${curl_response_code} response code.\n \
-              The requested URL is: ${req} \n \
-              Apigee's Response is :\n   $(cat ${curl_output}) \n"
+     
+        if [ "${metric_curl_response_code}" -ne 200 ]; then
+            msg="The request failed with ${metric_curl_response_code} response code.\nThe requested URL is: ${req} \nApigee's Response is :\n  
+             $(cat ${metric_curl_output}) \n"
           echo "${msg}"
           echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg}" >> ${log_path}
           exit 1
         fi
 
-        if [ ! -f "${curl_output}" ]; then
+        if [ ! -f "${metric_curl_output}" ]; then
           msg="The output of the cURL request wasn't saved. Please ensure that $(whoami) user has write acccess to $(pwd). Exiting..."
           echo "${msg}"
           echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg}" >> ${log_path}
           exit 0
-        fi
-
+        fi  
+        echo "DEBUG: Processing ${metric_curl_output} collection. "
         #check if identifier string is present in the output
-        if ! grep -q identifier "${curl_output}"; then
+        output_finder="identifier"  # this variable got to be unique for each curl request as bash handles all variables as global. 
+        if ! grep -q ${output_finder} "${metric_curl_output}"; then
               msg="The request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
               Please make sure there is traffic - from ${from_range} to ${to_range}"
               echo "${msg}"
@@ -208,11 +262,11 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                       | select(.name == "avg(request_processing_latency)")
                       | .values
                       ) as $avg_request_processing_latency
-                | $identifier, $global_avg_total_response_time, $global_avg_request_processing_latency,$global_avg_target_response_time,
+                |  $identifier, $global_avg_total_response_time, $global_avg_request_processing_latency,$global_avg_target_response_time,
                 ($message_count | add),($error_count | add),($avg_total_response_time | add)/ ($avg_total_response_time | length),
                 ($avg_target_response_time | add)/ ($avg_target_response_time | length),
                 ($avg_request_processing_latency | add)/ ($avg_request_processing_latency | length)
-              '< ${curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_response.out
+              '< ${metric_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_response.out
 
               #1.Processing Performance metrics outputs. 
               
@@ -231,6 +285,78 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
             awk 'NF>0{a=$0;getline b; getline c; getline d; getline e; getline f; getline g; getline h; getline i;
                   print a FS b FS c FS d FS e FS f FS g FS h FS i}' jq_processed_response.out > metrified_response.out
 
+           echo "DEBUG: Processing ${fourxx_curl_output} collections"
+            
+            finder_4xx="identifier"
+            if ! grep -q ${finder_4xx} "${fourxx_curl_output}"; then
+                msg="The 4xx request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
+                this usually mean no proxy returned 4XX response code from ${from_range} to ${to_range}"
+                echo "${msg}"
+                echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >> ${log_path}
+                echo " 4xx does not exist. setting metrified_response.out as the final output"
+                # merged_metric_file="metrified_response.out"
+            else 
+                jq  -r '
+                    .[].stats.data[]
+                    | (.identifier.values[0]) as $identifier
+                    | (.metric[]
+                          | select(.name == "sum(message_count)")
+                          | .values
+                          ) as $fourxx_count
+                    | [$identifier, ($fourxx_count | add)] | @tsv
+                   '< ${fourxx_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_4xx_response.out
+                    
+                    found_4xx="true"
+                
+                  #  #Merge/Join jq_processed_4xx_response.out into jq_processed_response.out 
+                  #  IOFileJoiner jq_processed_4xx_response.out metrified_response.out merged_with_4xx.out
+            fi
+          
+            echo "DEBUG: Processing ${fivexx_curl_output} collections"
+            finder_5xx="identifier"
+            if ! grep -q ${finder_5xx} "${fivexx_curl_output}"; then
+                msg="The 5xx request was successful, but Apigee didn't respond with any proxy info in the specified time range \n \
+                this usually mean no proxy returned 4XX response code from ${from_range} to ${to_range}"
+                echo "${msg}"
+                echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >> ${log_path}
+                # #If 5xx does not exist....
+                #  if [ -f "merged_with_4xx.out" ]; then 
+                #  #but 4xx exist, then use merged_with_4xx.out as the final file, 
+                #     echo " 4xx exist but 5xx does not exist. setting merged_with_4xx.out as the final output"
+                #     merged_metric_file="merged_with_4xx.out"
+                #   else
+                #   # however if 4xx and 5xx does not exist, then use the main metrified_response.out file as the final file
+                #     echo " 4xx and 5xx does not exist. setting metrified_response.out as the final output"
+                #     merged_metric_file="metrified_response.out"
+                #  fi
+            else 
+                jq  -r '
+                    .[].stats.data[]
+                    | (.identifier.values[0]) as $identifier
+                    | (.metric[]
+                          | select(.name == "sum(message_count)")
+                          | .values
+                          ) as $fivexx_count
+                    | [$identifier, ($fivexx_count | add)] | @tsv
+                   '< ${fivexx_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' > jq_processed_5xx_response.out
+                    found_5xx="true"
+                    # if [ -f "merged_with_4xx.out" ]; then 
+                    #   echo "4xx and 5xx found... merging merged_with_4xx.out and jq_processed_5xx_response.out "
+                    #   # If 4xx error is found, this condition will be met, it will merge all 3 outputs (i.e main metrified_response.out file, 4xx and 5xx)
+                    #   IOFileJoiner jq_processed_5xx_response.out merged_with_4xx.out ${merged_metric_file} 
+                    #  else
+                    #     # this condition will only be satisifed if 4xx does not exist, this will result in merging only 
+                    #     # 5xx response to the main jq_processed_response.out file. 
+                    #     echo "4xx not found, but 5xx exist... merging metrified_response.out and jq_processed_5xx_response.out "
+                    #     IOFileJoiner jq_processed_5xx_response.out metrified_response.out ${merged_metric_file}
+                    # fi
+             fi
+
+            generic_metric_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}"
+            sum_of_messages=0
+            sum_of_errors=0
+            overrall_response_time=0
+            i=0
             while read -r response_content ; do
                 identifier=$(echo ${response_content} | awk '{print $1}')
                 #round the values up to highest or lowest int->awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}'
@@ -245,8 +371,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                 avg_request_processing_latency=$(echo ${response_content}  | awk '{print $9}' |awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
                 
                 #parameterising the paths to make it easier to manager in the future
-                name_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}|${identifier}"
-                
+                name_path="${generic_metric_path}|${identifier}"
                 echo "$name_path|Availability, value=1"
                 echo "$name_path|Total Message Count, value=${message_count}"
                 echo "$name_path|Total Error Count, value=${error_count}"
@@ -256,27 +381,55 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                 echo "$name_path|Average Total Response Time, value=${avg_total_response_time}"
                 echo "$name_path|Average Target Response Time, value=${avg_target_response_time}"
                 echo "$name_path|Average Request Processing Latency, value=${avg_request_processing_latency}"
+
+                sum_of_messages=$(( $sum_of_messages + ${message_count} ))
+                sum_of_errors=$(( $sum_of_errors + ${error_count} ))
+                overrall_response_time=$(( $overrall_response_time + $avg_total_response_time ))
+                i=$(( $i + 1 ))
             done < metrified_response.out
+            avg=$(( $overrall_response_time/$i ))
+            rounded_avg=$(echo ${avg} | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+            echo "$generic_metric_path|Overall Average Response Time, value=${rounded_avg}"
+            echo "$generic_metric_path|Message Count Sum, value=${sum_of_messages}"
+            echo "$generic_metric_path|Error Count Sum, value=${sum_of_errors}"
+            
+            #Processing 4xx metrics for AppDynamics
+            if [ "${found_4xx}" = "true" ]; then
+             sum_of_four_xx=0
+            while read -r response_content_4xx ; do
+                echo "Processing 4xx metrics for AppDynamics"
+                identifier=$(echo ${response_content_4xx} | awk '{print $1}')
+                name_path="${generic_metric_path}|${identifier}"
+                #round the values up to highest or lowest int->awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}'
+                four_xx_count=$(echo ${response_content_4xx}  | awk '{print $2}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+                echo "$name_path|4XX Count, value=${four_xx_count}"
+                #Calaculate Sum of all 5XX errors
+                sum_of_four_xx=$(( ${sum_of_four_xx}+${four_xx_count} ));   
+            done < jq_processed_4xx_response.out
+              echo "$generic_metric_path|4XX Sum, value=${sum_of_four_xx}"
+            fi
+
+            #Processing 5xx metrics for AppDynamics
+            if [ "${found_5xx}" = "true" ]; then
+            sum_of_five_xx=0
+            while read -r response_content_5xx ; do
+                echo "Processing 5xx metrics for AppDynamics"
+                identifier=$(echo ${response_content_5xx} | awk '{print $1}')
+                name_path="${generic_metric_path}|${identifier}"
+                #round the values up to highest or lowest int->awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}'
+                five_xx_count=$(echo ${response_content_5xx}  | awk '{print $2}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+
+                echo "$name_path|5XX Count, value=${five_xx_count}"
+                #Calaculate Sum of all 5XX errors
+                sum_of_five_xx=$(( ${sum_of_five_xx}+${five_xx_count} )) ;   
+            done < jq_processed_5xx_response.out
+               echo "$generic_metric_path|5XX Sum, value=${sum_of_five_xx}"
+            fi
 
           #2.Processing HTTP Status Code Response Codes 
-          jq -r  '.[].stats.data[]
-          | [.identifier.values]
-          | "\(.[0]) "
-          ' < ${curl_output} | sed 's/"//g;s/[][]//g;s/,/ /g' >  jq_processed_status_code.out
-
-          #jq_processed_status_code.out file format is is :
-          # identifier[space]response_status_code[space]target_response_code"
-          while read -r status_codes ; do
-              identifier=$(echo ${status_codes} | awk '{print $1}')
-              response_status_code=$(echo ${status_codes} | awk '{print $2}')
-              target_response_code=$(echo ${status_codes} | awk '{print $3}')
-              name_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}|${identifier}"
-              echo "$name_path|Response Status Code|${response_status_code}, value=1"
-              echo "$name_path|Target Response Code|${target_response_code}, value=1"
-          done < jq_processed_status_code.out
-          
             #clean up, but leave response.json to help troubleshoot any issues with this script and/or Apigee's response
-          rm jq_processed_response.out metrified_response.out jq_processed_status_code.out
+           
+            # rm jq_processed_response.out metrified_response.out jq_processed_status_code.out
 
             #Send anaytics events 
             if (${enable_biq} -eq "true"); then 
