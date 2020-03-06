@@ -1,4 +1,6 @@
 {
+"metric_prefix":"Server|Component:<tier-name>|Custom Metrics|Apigee",
+
  "connection_details": [
     {
       "host_url": "https://api.enterprise.apigee.com",
@@ -19,8 +21,8 @@
       "password": "password"
     }
   ],
-
-  "enable_BiQ": true,
+  
+  "enable_BiQ": false,
   "analytics_details":[
     {
       "analytics_endpoint":"https://analytics.api.appdynamics.com",
