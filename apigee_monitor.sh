@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Author : Israel.Ogbole@appdynamics.com
-version="[ApigeeMonitore v2.6.0 Build Date 2020-03-04 12:59]"
+version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
 
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
@@ -35,7 +35,7 @@ apigee_conf_file="testconfig.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
-query_interval=1 #in minutues. This value must be the same as the execution frequency value set in the monitor.xml file
+query_interval=90 #in seconds. Best to leave this at 1.5 mins for better accuracy based on my test result. There's a slight lag in the way apigee computes 4xx and 5xx errors stats. 
 query_limit=120
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
 apiproxy_names=""
@@ -45,6 +45,13 @@ dimensions="apiproxy"
 metric_curl_output="metric_response.json"
 fourxx_curl_output="4xx_response.json"
 fivexx_curl_output="5xx_response.json"
+
+#analytics output 
+
+biq_perf_metrics="biq_prepped_perf_metrics.json"
+biq_5xx_metrics="biq_prepped_5xx_metrics.json"
+biq_4xx_metrics="biq_prepped_4xx_metrics.json"
+
 #initialize reponse codes
 fourxx_curl_response_code=""
 fivexx_curl_response_code=""
@@ -54,10 +61,6 @@ merged_metric_file="merged_metric_file.out"
 
 found_4xx="false"
 found_5xx="false"
-
-#dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_geo_timezone,ax_week_of_month,ax_geo_country,ax_geo_region,ax_geo_continent,ax_dn_region,client_ip"
-
-#dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,ax_resolved_client_ip,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,virtual_host,client_ip,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,proxy_client_ip,ax_true_client_ip,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,target_ip,target_url,x_forwarded_for_ip,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_geo_timezone,ax_week_of_month,,ax_geo_country,ax_geo_region,ax_geo_continent,ax_dn_region"
 
 #takes 3 params in this order 1. requst url 2. username 3. password
 IOcURL() {
@@ -79,6 +82,28 @@ IOFileJoiner() {
   NR==FNR{ a[$1]=$2; next }
   { print $0, ($1 in a ? a[$1] : 0) }
 ' "${1}" "${2}" >"${3}"
+}
+
+function JSONProccessor(){
+ jq '
+  def summarize:
+    if .name | test("^sum", "") then
+      {"\(.name)": (.values | add)}                           # sum
+    elif .name | test("^avg|^global-avg", "") then
+      {"\(.name)": ((.values | add) / (.values | length)) }   # average
+    else
+      {"\(.name)": .values[]}                                 # pass through unmodified
+    end;
+
+   [
+  .Response.stats.data[] |
+  .identifier.names[] as $name |
+  .identifier.values[] as $val |
+  {"\($name)": "\($val)"} + ([
+    .metric[] | summarize
+  ] | add)
+]
+'  < ${1} > ${2}
 }
 
 #Initialise log with version
@@ -132,7 +157,7 @@ echo ""
 
 #or this if you're using Ubuntu, CentOS or Redhat
 to_range=$(date +%m/%d/%Y+%H:%M:%S)
-from_range=$(date +%m/%d/%Y+%H:%M:%S --date="$query_interval minutes ago")
+from_range=$(date +%m/%d/%Y+%H:%M:%S --date="$query_interval seconds ago")
 
 echo "==> Time range: from ${from_range} to ${to_range}"
 
@@ -179,8 +204,6 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
     #https://api.enterprise.apigee.com/v1/organizations/iogbole-70230-eval/environments/prod/stats/apiproxy,response_status_code,target_response_code?_optimized=js&select=sum(message_count),sum(is_error),avg(total_response_time),avg(target_response_time)&sort=DESC&sortby=sum(message_count),sum(is_error),avg(total_response_time),avg(target_response_time)&timeRange=12/18/2019+00:00:15~12/19/2019+00:50:15"
     #send the request to Apigee
     #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
-    echo "sending request to Apigee.... "
-
     if [ "${use_proxy_filter}" = "true" ]; then
       echo "Using filtered request"
       echo "Metric request.."
@@ -279,6 +302,11 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                 ($avg_request_processing_latency | add)/ ($avg_request_processing_latency | length)
               ' <${metric_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' >jq_processed_response.out
 
+        #Process BiQ Data 
+        JSONProccessor ${metric_curl_output} raw_${biq_perf_metrics}
+        #Add Apigee Environment details to help distinguish data source in BiQ
+        jq  --arg name "${server_friendly_name}" --arg env "${environments}"  --arg org "${organization}"  '.[]  += {"server_friendly_name":$name, "environment":$env, "organization":$org}' < raw_${biq_perf_metrics} > ${biq_perf_metrics}
+        
         #1.Processing Performance metrics outputs.
         #tranpose the matrix of the metrics
         #a=identifier
@@ -318,6 +346,9 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
 
           found_4xx="true"
 
+          #4xx BiQ Processor
+          JSONProccessor ${fourxx_curl_output} biq_4xx_raw.json
+          cat biq_4xx_raw.json | jq -r '.[]  | {apiproxy: .apiproxy, four_xx: ."sum(message_count)"}' |  awk '/}/{print $0 ","; next}1' |  sed '$ s/.$//' | awk 'BEGINFILE{print "["};ENDFILE{print "]"};1' > ${biq_4xx_metrics}
           #  #Merge/Join jq_processed_4xx_response.out into jq_processed_response.out
           #  IOFileJoiner jq_processed_4xx_response.out metrified_response.out merged_with_4xx.out
         fi
@@ -350,6 +381,9 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                     | [$identifier | gsub("( ? )"; ""), ($fivexx_count | add)] | @tsv
                    ' <${fivexx_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' >jq_processed_5xx_response.out
           found_5xx="true"
+          #5xx BiQ Processor
+          JSONProccessor ${fivexx_curl_output} biq_5xx_raw.json
+          cat  biq_5xx_raw.json | jq -r '.[]  | {apiproxy: .apiproxy, five_xx: ."sum(message_count)"}' |  awk '/}/{print $0 ","; next}1' |  sed '$ s/.$//' | awk 'BEGINFILE{print "["};ENDFILE{print "]"};1' > ${biq_5xx_metrics}
           # if [ -f "merged_with_4xx.out" ]; then
           #   echo "4xx and 5xx found... merging merged_with_4xx.out and jq_processed_5xx_response.out "
           #   # If 4xx error is found, this condition will be met, it will merge all 3 outputs (i.e main metrified_response.out file, 4xx and 5xx)
@@ -439,16 +473,17 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
         #2.Processing HTTP Status Code Response Codes
         #clean up, but leave response.json to help troubleshoot any issues with this script and/or Apigee's response
 
-        # rm jq_processed_response.out metrified_response.out jq_processed_status_code.out
+        rm jq_processed_*.out metrified_response.out 
 
         #Send anaytics events
         if (${enable_biq} -eq "true"); then
           echo "BiQ is enabled, sending analytics events "
-          ./analytics/analytics_events.sh
+          source ./analytics/analytics_events.sh
         fi
       fi # end check if identifier string is present in the output
 
     fi # end 200 response loop
+  
   fi   #end if host_url not null
 
 done #end config.json loop

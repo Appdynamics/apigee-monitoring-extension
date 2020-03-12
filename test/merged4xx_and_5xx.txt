@@ -1,2 +1,0 @@
-gitTrial 1 90
-Yahoo 1 91
