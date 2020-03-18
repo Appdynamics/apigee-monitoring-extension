@@ -5,7 +5,7 @@
 
 Apigee is an API management platform that enables developers and businesses to design, secure, deploy, monitor, and scale APIs. This extension makes it possible for AppDynamics customers to monitor the performance of Apigee API proxies.
 
-The Apigee monitoring extension help AppDynamics customers to quickly isolate the root cause of a performance issues - whether it is Apigee's overhead and/or the backend (target) service. The extension monitors API proxy performance metrics such as Total Error count, Traffic rate, Response Time and Error response codes. In addition, it has an optional built-in feature to analyse and report on API proxy performance metrics using the AppDynamics BiQ platform - this gives customers the extra flexibility of slicing and dicing API proxy and target errors for reporting and continues enhancements purposes.
+The Apigee monitoring extension help AppDynamics customers to quickly isolate the root cause of performance issues - whether it is Apigee's overhead and/or the backend (target) service. The extension monitors API proxy performance metrics such as Total Error count, Traffic rate, Response Time and Error response codes. Also, it has an optional built-in feature to analyse and report on API proxy performance metrics using the AppDynamics BiQ platform - this gives customers the extra flexibility of slicing and dicing API proxy and target errors for reporting and continues enhancements purposes.
 
 The extension now supports monitoring for multiple Apigee instances, environments and orgs - in any combination of your choice.
  
@@ -16,7 +16,7 @@ The extension now supports monitoring for multiple Apigee instances, environment
 3. **Overall Average Response Time:**  Overall Average Response Time for all proxies - it's calculated by summing the response times and divided by the number of proxies available at the time. 
 4. **Request Processing Latency:** Number of milliseconds from the time when a call reaches the selected API proxy to the time when Apigee sends the call to your target server.
 5. **Traffic:** The number of recorded API requests for each API proxy
-6. **Error:**  The total number of times API proxies failed over the specified time period. Proxy failure can occur when a policy fails or when there's a runtime 
+6. **Error:**  The total number of times API proxies failed over the specified period. Proxy failure can occur when a policy fails or when there's a runtime 
 7. **Error Count Sum:** Summation of errors for all API proxies  
 8. **4XX Count:** The total number of 4XX HTTP Response Code for each API proxy 
 9. **4XX Sum:** Summation of 4XX HTTP Response Codes in all API proxies
@@ -40,11 +40,11 @@ The extension now supports monitoring for multiple Apigee instances, environment
   | metric_prefix  | Define metrics prefix, for example:  `Server|Component:<tier-name>|Custom Metrics|Apigee ` . Please do not add `|` at the end. |
   | org  | Select the organisation that contains the proxies you would like to monitor |
   | env  | Select the environment that contains the proxies you would like to monitor. prod, Dev, Prod, etc.  |
-  | server_friendly_name  | An free text indicator that best describes the your apigee environment, org, or environment. It's best to use one-word |
+  | server_friendly_name  | An free text indicator that best describes your Apigee environment, org, or environment. use - or _ to separate words, not spaces |
   | username | Username of the read-only service account  |
   | password | Password of the read-only service account |
   | use_proxy-filter  | If set to true, the monitoring extension will only collect metrics for proxies that are defined in the `apipproxy.conf` file |
-  | enable_BiQ  | If set to true, the monitoring extension will send proxy and target response codes to BiQ plaform. This requires BiQ license|
+  | enable_BiQ  | If set to true, the monitoring extension will send proxy and target response codes to BiQ platform. This requires BiQ license|
   | analytics_endpoint  | This is the analytics endpoint of your controller. This differs depending on the location of your controller. Please refer to this [doc](https://docs.appdynamics.com/display/PAA/Onprem-DC1+Domains+and+IP+Ranges). |
   | global_account_name  | You can get the global account name to use from the [License page](https://docs.appdynamics.com/display/latest/License+Management)  |
   | analytics_key | Create the analytics API Key by following the instruction in this [doc](https://docs.appdynamics.com/display/latest/Managing+API+Keys).  Grant Manage, Query and Publish permissions to Custom |
@@ -98,7 +98,7 @@ Do not proceed until you get an output similar to the above.
 
 6. Restart the machine agent 
 
-Note: The Global* metric is synonymous with AppDynamics baseline metric. We recommend that you use the non Global metrics for your health rule metrics. 
+Note: The Global* metric is synonymous with AppDynamics baseline metric. We recommend that you use the non-Global metrics for your health rule metrics. 
 
 ###  BiQ Output ###
 
@@ -119,13 +119,13 @@ Metrics are located in Application Infrastructure Performance | Tier_NAME| Custo
 
 ### Troubleshooting ###
 
-Review $MACHINE_AGENT_HOME/logs/apigee-monitor.log 
+1. Review $MACHINE_AGENT_HOME/logs/apigee-monitor.log 
 
-Check the analytics page in Apigee and ensure you can see performance data for the proxy APIs in the correct org and env 
+2. Check the analytics page in Apigee and ensure you can see performance data for the proxy APIs in the correct org and env 
 
-Send a manaul curl request to your apigee instance to verify it's working
+3. Send a manual curl request to your apigee instance to verify it's working
 
-If you need to contact support, reload the Apigee analytics page, save [HTTP HAR file](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-create-a-HAR-File-to-troubleshoot-web-download-issues/ta-p/23373) and attach it to the support case. 
+4. If you need to contact support, reload the Apigee analytics page, save [HTTP HAR file](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-create-a-HAR-File-to-troubleshoot-web-download-issues/ta-p/23373) and attach it to the support case. 
 
 ### Contribution guidelines ###
 
