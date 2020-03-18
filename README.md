@@ -1,5 +1,5 @@
 # Apigee Monitoring Extension for AppDynamics #
- #### For use with Apigee Edge on Onprem-DC1 and on-premise ####
+ #### Tested with Apigee Edge ####
  
 ## Use Case ###
 
@@ -38,7 +38,7 @@ The extension now supports monitoring for multiple Apigee instances, environment
   | --- | --- |
   | host_url  | Apigee host url, including the port number if required. |
   | metric_prefix  | Define metrics prefix, for example:  `Server|Component:<tier-name>|Custom Metrics|Apigee ` . Please do not add `|` at the end. |
-  | org  | Select the organisation that contains the proxies you would like to monitor |
+  | org  | Select the organization that contains the proxies you would like to monitor |
   | env  | Select the environment that contains the proxies you would like to monitor. prod, Dev, Prod, etc.  |
   | server_friendly_name  | An free text indicator that best describes your Apigee environment, org, or environment. use - or _ to separate words, not spaces |
   | username | Username of the read-only service account  |
