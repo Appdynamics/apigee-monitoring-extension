@@ -10,8 +10,8 @@
         <description>ApigeeMonitor Task Executor</description>
         <type>executable</type>
         <execution-style>periodic</execution-style>
-        <execution-frequency-in-seconds>120</execution-frequency-in-seconds>
-        <execution-timeout-in-secs>120</execution-timeout-in-secs>
+        <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+        <execution-timeout-in-secs>60</execution-timeout-in-secs>
         <task-arguments>
             <argument name="file_path" is-required="true" default-value="apiproxy.conf"/>
         </task-arguments>
