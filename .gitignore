@@ -1,10 +1,9 @@
 
---config.json
+
 analytics/analytics_events.txt
 response.json
 analytics/schema.markerfile
 testconfig.json
-*.sh
 4xx_response.json
 5xx_response.json
 jq_processed_4xx_response.out
