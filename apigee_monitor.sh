@@ -31,7 +31,7 @@ version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
 #metric_prefix="Custom Metrics|Apigee"  #Read this value is now from config.json
 metric_base="Proxies"
 proxy_conf_file_path="apiproxy.conf"
-apigee_conf_file="testconfig.json"
+apigee_conf_file="config.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
