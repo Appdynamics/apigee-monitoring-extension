@@ -68,7 +68,7 @@ The extension now supports monitoring for multiple Apigee instances, environment
   *Note: user_proxy_filter, when set to true will ONLY send API performance metrics for the predefined proxies in the
    apiproxy.conf file. If set to false, performance data for ALL apigee proxies in the `org` and `env` will be collected.* 
 
-5. prod it: `./apigee_monitor.sh`
+5. Test it: `./apigee_monitor.sh`
 6. If everything is OK, you should see an output in stdout that is similar to this: 
 `````
 sending request to Apigee.... 
