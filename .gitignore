@@ -11,3 +11,4 @@ jq_processed_5xx_response.out
 jq_processed_response.out
 metric_response.json
 metrified_response.out
+biq_*.json

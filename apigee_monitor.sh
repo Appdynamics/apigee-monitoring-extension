@@ -31,12 +31,10 @@ version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
 #metric_prefix="Custom Metrics|Apigee"  #Read this value is now from config.json
 metric_base="Proxies"
 proxy_conf_file_path="apiproxy.conf"
-apigee_conf_file="config.json"
+apigee_conf_file="testconfig.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
-query_interval=90 #in seconds. Best to leave this at 1.5 mins for better accuracy based on my test result. There's a slight lag in the way apigee computes 4xx and 5xx errors stats. 
-query_limit=120
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
 apiproxy_names=""
 #dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,client_id,ax_resolved_client_ip,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,virtual_host,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,proxy_client_ip,ax_true_client_ip,client_ip,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,target_ip,target_url,x_forwarded_for_ip,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_dn_region,ax_dn_region,client_ip"
@@ -127,6 +125,8 @@ fi
 #Set Metric Prefix from config
 
 metric_prefix=$(jq -r '.metric_prefix' <${apigee_conf_file})
+query_interval=$(jq -r '.query_interval' <${apigee_conf_file}) #in seconds. Best to leave this at 1.5 mins for better accuracy based on my test result. There's a slight lag in the way apigee computes 4xx and 5xx errors stats. 
+query_limit=$(jq -r '.query_limit' <${apigee_conf_file})
 
 echo "Setting Metric Prefix - $metric_prefix "
 

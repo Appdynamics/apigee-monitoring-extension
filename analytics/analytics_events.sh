@@ -81,7 +81,7 @@ fi
 # fi
 
 #decorate biq payload
-cat ${biq_request_payload} | sed 's/sum(//g; s/)//g; s/avg(//g; s/-/_/g' > "decorated_${biq_request_payload}"
+cat ${biq_request_payload} | sed 's/is_error/error_count/g; s/)//g;s/sum(//g; s/)//g; s/avg(//g; s/-/_/g' > "decorated_${biq_request_payload}"
 
 biq_request_payload="decorated_${biq_request_payload}"
 
@@ -97,8 +97,8 @@ else
         msg="Succesfully sent analytics event to AppDynamics."
         echo "${msg}"
         echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] ${msg}" >> ${log_path}
-        #clean up 
-        rm biq_*.json decorated_biq_*.json raw_biq_prepped*.json
+        #clean up  
+       rm biq_*.json decorated_biq_*.json raw_biq_prepped*.json
     else 
         msg="Response code: ${curl_response_code}. Failed to send analytics event to AppDynamics, please ensure your credentials are correct"
         echo "${msg}"
