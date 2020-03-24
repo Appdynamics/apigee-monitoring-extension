@@ -47,7 +47,7 @@ else
     echo "==>Marker file exist. This means $schema_name already exist. Skipping"  
 fi
 
-#normalise the JSON payload from Apigee response to match AppDynamics Schema. 
+#normalize the JSON payload from Apigee response to match AppDynamics Schema. 
 
  if [ "${found_4xx}" = "true" ] && [ "${found_5xx}" = "true" ]; then
     echo "merging all 3 json files"
@@ -86,10 +86,10 @@ cat ${biq_request_payload} | sed 's/is_error/error_count/g; s/)//g;s/sum(//g; s/
 biq_request_payload="decorated_${biq_request_payload}"
 
 if [ ! -f "${biq_request_payload}" ]; then
-  msg="${biq_request_payload} does not exist. No metric will be sent to Apigee. "
-  echo "${msg}"
-  echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg} " >>${log_path}
-  exit 0
+    msg="${biq_request_payload} does not exist. No metric will be sent to Apigee. "
+    echo "${msg}"
+    echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg} " >>${log_path}
+    exit 0
 else
     curl_response_code=$(curl -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type:application/vnd.appd.events+json;v=2" -H"Accept:application/json"  -d "$(cat ${biq_request_payload})" -s -w "%{http_code}")
     echo "response code = $curl_response_code" 
@@ -98,7 +98,7 @@ else
         echo "${msg}"
         echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] ${msg}" >> ${log_path}
         #clean up  
-       rm biq_*.json decorated_biq_*.json raw_biq_prepped*.json
+        rm biq_*.json decorated_biq_*.json raw_biq_prepped*.json
     else 
         msg="Response code: ${curl_response_code}. Failed to send analytics event to AppDynamics, please ensure your credentials are correct"
         echo "${msg}"

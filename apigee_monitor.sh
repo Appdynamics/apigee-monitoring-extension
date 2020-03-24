@@ -3,6 +3,8 @@
 #Author : Israel.Ogbole@appdynamics.com
 version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
 
+[[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
+
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 # 2) Target Response Time:	Number of milliseconds it took your target server to respond to a call. This number tells you how your own servers are behaving.
