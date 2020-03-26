@@ -1,6 +1,6 @@
 {
 "metric_prefix":"Server|Component:<tier-name>|Custom Metrics|Apigee",
-"query_interval":90,
+"query_interval_in_secs": 90,
 "query_limit": 120,
 
  "connection_details": [

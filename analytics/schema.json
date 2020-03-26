@@ -13,7 +13,15 @@
         "request_processing_latency": "float",
         "server_friendly_name": "string",
         "environment": "string",
-        "organization": "string"
+        "organization": "string",
+        "min_request_processing_latency":"float",
+        "max_request_processing_latency":"float",
+        "min_target_response_time":"float",
+        "max_target_response_time":"float",
+        "min_total_response_time": "float",
+        "max_total_response_time": "float", 
+        "policy_error":"float",
+        "target_error": "float"
     }
 }
 

@@ -81,7 +81,7 @@ fi
 # fi
 
 #decorate biq payload
-cat ${biq_request_payload} | sed 's/is_error/error_count/g; s/)//g;s/sum(//g; s/)//g; s/avg(//g; s/-/_/g' > "decorated_${biq_request_payload}"
+cat ${biq_request_payload} | sed 's/min(/min_/g; s/max(/max_/g; s/is_error/error_count/g; s/)//g;s/sum(//g; s/)//g; s/avg(//g; s/-/_/g' > "decorated_${biq_request_payload}"
 
 biq_request_payload="decorated_${biq_request_payload}"
 

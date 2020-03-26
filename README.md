@@ -13,8 +13,10 @@ The extension now supports monitoring for multiple Apigee instances, environment
 
 1. **Response Time:**  Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 2. **Target Response Time:**  Number of milliseconds it took your target server or service to respond to a call. This number tells you how your own services are behaving.
+3. **Min and Max of Target Response Time:**  The Minimum and Maximum Target Response Time over in the given query period
 3. **Overall Average Response Time:**  Overall Average Response Time for all proxies - it's calculated by summing the response times and divided by the number of proxies available at the time. 
 4. **Request Processing Latency:** Number of milliseconds from the time when a call reaches the selected API proxy to the time when Apigee sends the call to your target server.
+ **Min and Max of Processing Latency:**  The Minimum and Maximum Processing Latency values over the query period
 5. **Traffic:** The number of recorded API requests for each API proxy
 6. **Error:**  The total number of times API proxies failed over the specified period. Proxy failure can occur when a policy fails or when there's a runtime 
 7. **Error Count Sum:** Summation of errors for all API proxies  
@@ -75,24 +77,32 @@ sending request to Apigee....
 Using un-filtered request - collecting all proxy information
 curl https://api.enterprise.apigee.com/v1/organizations/appd/environments/prod/stats/apiproxy,response_status_code,target_response_code?_optimized=js&realtime=true&limit=120&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=01/11/2020+18:13:43~01/11/2020+18:15:43&timeUnit=minute&tsAscending=true -u israelo@appd.com:******
 ==> 200
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Availability, value=1
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Total Message Count, value=2
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Total Error Count, value=2
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Global Average Response Time, value=37
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Global Request Processing Latency, value=1
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Global Average Target Response Time, value=35
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Average Total Response Time, value=37
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Average Target Response Time, value=35
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|Average Request Processing Latency, value=1
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|Overall Average Response Time, value=77
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|Message Count Sum, value=4
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|Error Count Sum, value=2
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Availability, value=1
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Total Message Count, value=16
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Total Error Count, value=2
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Total Policy Errors, value=0
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Total Target Errors, value=0
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Global Average Response Time, value=7222
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Average Total Response Time, value=5822
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Minimum Total Response Time, value=125
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Maximum Total Response Time, value=55145
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Global Request Processing Latency, value=1
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Average Request Processing Latency, value=1
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Minimum Request Processing Latency, value=0
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Maximum Request Processing Latency, value=2
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Global Average Target Response Time, value=7216
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Average Target Response Time, value=5815
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Minimum Target Response Time, value=120
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|Maximum Target Response Time, value=55142
+
 Processing 4xx metrics for AppDynamics
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|5XX Count, value=1
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|5XX Sum, value=1
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|4XX Count, value=2
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|Total 5XX, value=2
+
 Processing 5xx metrics for AppDynamics
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|OAuth|5XX Count, value=2
-name=Custom Metrics|Apigee|Onprem-DC1|Proxies|prod|5XX Sum, value=2
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|OAuth_v1|5XX Count, value=1
+name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|prod|Total 5XX, value=1
+
 `````
 Do not proceed until you get an output similar to the above. 
 
