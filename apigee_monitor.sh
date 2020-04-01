@@ -3,6 +3,8 @@
 #Author : Israel.Ogbole@appdynamics.com
 version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
 
+[[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
+
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 # 2) Target Response Time:	Number of milliseconds it took your target server to respond to a call. This number tells you how your own servers are behaving.
@@ -31,12 +33,10 @@ version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
 #metric_prefix="Custom Metrics|Apigee"  #Read this value is now from config.json
 metric_base="Proxies"
 proxy_conf_file_path="apiproxy.conf"
-apigee_conf_file="config.json"
+apigee_conf_file="testconfig.json"
 log_path="../../logs/apigee-monitor.log"
 
 real_time=true
-query_interval=90 #in seconds. Best to leave this at 1.5 mins for better accuracy based on my test result. There's a slight lag in the way apigee computes 4xx and 5xx errors stats. 
-query_limit=120
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
 apiproxy_names=""
 #dimensions="apiproxy,response_status_code,target_response_code,api_product,ax_cache_source,client_id,ax_resolved_client_ip,client_id,developer_app,environment,organization,proxy_basepath,proxy_pathsuffix,apiproxy_revision,virtual_host,ax_ua_device_category,ax_ua_os_family,ax_ua_os_version,proxy_client_ip,ax_true_client_ip,client_ip,request_path,request_uri,request_verb,useragent,ax_ua_agent_family,ax_ua_agent_type,ax_ua_agent_version,target_basepath,target_host,target_ip,target_url,x_forwarded_for_ip,ax_day_of_week,ax_month_of_year,ax_hour_of_day,ax_dn_region,ax_dn_region,client_ip"
@@ -74,14 +74,6 @@ IOcURL() {
   # or use -n (.netrc) instead
   #metric_curl_response_code=$(curl -u ${apigee_username}:${apigee_password} -s -w "%{http_code}" -o "${metric_curl_output}" -X GET "${1}")
   response=$(curl -u "${2}":"${3}" -s -w "%{http_code}" -o "${4}" -X GET "${1}")
-}
-
-IOFileJoiner() {
-  # arg {1} = file2 - the smaller content, {2} = file 1 the super set file, {3} = output
-  awk '
-  NR==FNR{ a[$1]=$2; next }
-  { print $0, ($1 in a ? a[$1] : 0) }
-' "${1}" "${2}" >"${3}"
 }
 
 function JSONProccessor(){
@@ -127,6 +119,8 @@ fi
 #Set Metric Prefix from config
 
 metric_prefix=$(jq -r '.metric_prefix' <${apigee_conf_file})
+query_interval_in_secs=$(jq -r '.query_interval_in_secs' <${apigee_conf_file}) #in seconds. Best to leave this at 1.5 mins for better accuracy based on my test result. There's a slight lag in the way apigee computes 4xx and 5xx errors stats. 
+query_limit=$(jq -r '.query_limit' <${apigee_conf_file})
 
 echo "Setting Metric Prefix - $metric_prefix "
 
@@ -154,10 +148,10 @@ echo ""
 #today=$(date +"%m/%d/%Y")
 #to_range=$(echo ${today}+${time_now})
 #from_range=$(echo ${today}+${minutes_ago})
-
+ #GNU date
 #or this if you're using Ubuntu, CentOS or Redhat
 to_range=$(date +%m/%d/%Y+%H:%M:%S)
-from_range=$(date +%m/%d/%Y+%H:%M:%S --date="$query_interval seconds ago")
+from_range=$(date +%m/%d/%Y+%H:%M:%S --date="$query_interval_in_secs seconds ago")
 
 echo "==> Time range: from ${from_range} to ${to_range}"
 
@@ -197,12 +191,11 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
     fivexx_proxy_filter="&filter=(apiproxy%20in%20${apiproxy_names}%20and%20response_status_code%20ge%20500%20and%20response_status_code%20le%20599)"
     proxy_filter="&filter=(apiproxy%20in%20${apiproxy_names})"
 
-    req="${base_url}/${organization}/environments/${environments}/stats/${dimensions}?_optimized=js&realtime=${real_time}&limit=${query_limit}&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
+    min_max_params=",max(total_response_time),min(total_response_time),max(target_response_time),min(target_response_time),min(request_processing_latency),max(request_processing_latency)"
+    query_params="&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error),sum(target_error),sum(policy_error)"
 
-    #proxy_filter_req="${base_url}/${organization}/environments/${environments}/stats/${dimensions}?_optimized=js&realtime=${real_time}&limit=${query_limit}&select=sum(message_count),avg(total_response_time),avg(target_response_time),avg(request_processing_latency),sum(is_error)&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
+    req="${base_url}/${organization}/environments/${environments}/stats/${dimensions}?_optimized=js&realtime=${real_time}&limit=${query_limit}${query_params}${min_max_params}&sort=DESC&sortby=sum(message_count),avg(total_response_time),sum(is_error)&timeRange=${from_range}~${to_range}&timeUnit=${timeUnit}&tsAscending=true"
 
-    #https://api.enterprise.apigee.com/v1/organizations/iogbole-70230-eval/environments/prod/stats/apiproxy,response_status_code,target_response_code?_optimized=js&select=sum(message_count),sum(is_error),avg(total_response_time),avg(target_response_time)&sort=DESC&sortby=sum(message_count),sum(is_error),avg(total_response_time),avg(target_response_time)&timeRange=12/18/2019+00:00:15~12/19/2019+00:50:15"
-    #send the request to Apigee
     #use ${filtered_req} if you want to use the filtered request and ${req} for unfiltered
     if [ "${use_proxy_filter}" = "true" ]; then
       echo "Using filtered request"
@@ -296,33 +289,84 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                       | select(.name == "avg(request_processing_latency)")
                       | .values
                       ) as $avg_request_processing_latency
+                   | (.metric[]
+                      | select(.name == "min(request_processing_latency)")
+                      | .values 
+                      ) as $min_request_processing_latency
+                   | (.metric[]
+                      | select(.name == "max(request_processing_latency)")
+                      | .values 
+                      ) as $max_request_processing_latency
+                   | (.metric[]
+                      | select(.name == "max(target_response_time)")
+                      | .values 
+                      ) as $max_target_response_time
+                   | (.metric[]
+                      | select(.name == "min(target_response_time)")
+                      | .values 
+                      ) as $min_target_response_time
+                   | (.metric[]
+                      | select(.name == "min(total_response_time)")
+                      | .values 
+                      ) as $min_total_response_time
+                   | (.metric[]
+                      | select(.name == "max(total_response_time)")
+                      | .values 
+                      ) as $max_total_response_time
+                   | (.metric[]
+                      | select(.name == "sum(policy_error)")
+                      | .values
+                      ) as $sum_policy_error
+                   | (.metric[]
+                      | select(.name == "sum(target_error)")
+                      | .values
+                      ) as $sum_target_error
                 | $identifier | gsub("( ? )"; ""), $global_avg_total_response_time, $global_avg_request_processing_latency,$global_avg_target_response_time,
                 ($message_count | add),($error_count | add),($avg_total_response_time | add)/ ($avg_total_response_time | length),
                 ($avg_target_response_time | add)/ ($avg_target_response_time | length),
-                ($avg_request_processing_latency | add)/ ($avg_request_processing_latency | length)
+                ($avg_request_processing_latency | add)/ ($avg_request_processing_latency | length),
+                ($min_request_processing_latency | min),
+                ($max_request_processing_latency | max),
+                ($max_target_response_time | max),
+                ($min_target_response_time | min),
+                ($min_total_response_time | min),
+                ($max_total_response_time | max),
+                ($sum_policy_error | add),($sum_target_error | add)
               ' <${metric_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' >jq_processed_response.out
 
-        #Process BiQ Data 
-        JSONProccessor ${metric_curl_output} raw_${biq_perf_metrics}
-        #Add Apigee Environment details to help distinguish data source in BiQ
-        jq  --arg name "${server_friendly_name}" --arg env "${environments}"  --arg org "${organization}"  '.[]  += {"server_friendly_name":$name, "environment":$env, "organization":$org}' < raw_${biq_perf_metrics} > ${biq_perf_metrics}
-        
         #1.Processing Performance metrics outputs.
         #tranpose the matrix of the metrics
         #a=identifier
         #b=global-avg-total_response_time
         #c=global-avg-request_processing_latency
         #d=global-avg-request_processing_latency
-        #additional metrics - 19/12/2019
         #e=message_count
         #f=error_count
         #g=avg_total_response_time
         #h=avg_target_response_time
         #i=avg_request_processing_latency
 
-        awk 'NF>0{a=$0;getline b; getline c; getline d; getline e; getline f; getline g; getline h; getline i;
-                  print a FS b FS c FS d FS e FS f FS g FS h FS i}' jq_processed_response.out >metrified_response.out
+        #additional metrics - 25/03/2020 
+        #j=min_request_processing_latency
+        #k=max_request_processing_latency
 
+        #l=max_target_response_time
+        #m=min_target_response_time
+
+         #n=min_total_response_time
+         #o=max_total_response_time
+
+         #p=sum_policy_error
+         #q=sum_target_error
+
+        awk 'NF>0{a=$0;getline b; getline c; getline d; getline e; getline f; getline g; getline h; getline i; getline j; getline k; getline l; getline m; getline n; getline o; getline p; getline q; 
+                  print a FS b FS c FS d FS e FS f FS g FS h FS i FS j FS k FS l FS m FS n FS o FS p FS q}' jq_processed_response.out >metrified_response.out
+
+        #Process BiQ Data 
+        JSONProccessor ${metric_curl_output} raw_${biq_perf_metrics}
+        #Add Apigee Environment details to help distinguish data source in BiQ
+        jq  --arg name "${server_friendly_name}" --arg env "${environments}"  --arg org "${organization}"  '.[]  += {"server_friendly_name":$name, "environment":$env, "organization":$org}' < raw_${biq_perf_metrics} > ${biq_perf_metrics}
+      
         echo "DEBUG: Processing ${fourxx_curl_output} collections"
 
         finder_4xx="identifier"
@@ -349,8 +393,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
           #4xx BiQ Processor
           JSONProccessor ${fourxx_curl_output} biq_4xx_raw.json
           cat biq_4xx_raw.json | jq -r '.[]  | {apiproxy: .apiproxy, four_xx: ."sum(message_count)"}' |  awk '/}/{print $0 ","; next}1' |  sed '$ s/.$//' | awk 'BEGINFILE{print "["};ENDFILE{print "]"};1' > ${biq_4xx_metrics}
-          #  #Merge/Join jq_processed_4xx_response.out into jq_processed_response.out
-          #  IOFileJoiner jq_processed_4xx_response.out metrified_response.out merged_with_4xx.out
+         
         fi
 
         echo "DEBUG: Processing ${fivexx_curl_output} collections"
@@ -360,16 +403,6 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                 this usually mean no proxy returned 4XX response code from ${from_range} to ${to_range}"
           echo "${msg}"
           echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] $msg" >>${log_path}
-          # #If 5xx does not exist....
-          #  if [ -f "merged_with_4xx.out" ]; then
-          #  #but 4xx exist, then use merged_with_4xx.out as the final file,
-          #     echo " 4xx exist but 5xx does not exist. setting merged_with_4xx.out as the final output"
-          #     merged_metric_file="merged_with_4xx.out"
-          #   else
-          #   # however if 4xx and 5xx does not exist, then use the main metrified_response.out file as the final file
-          #     echo " 4xx and 5xx does not exist. setting metrified_response.out as the final output"
-          #     merged_metric_file="metrified_response.out"
-          #  fi
         else
           jq -r '
                     .[].stats.data[]
@@ -384,16 +417,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
           #5xx BiQ Processor
           JSONProccessor ${fivexx_curl_output} biq_5xx_raw.json
           cat  biq_5xx_raw.json | jq -r '.[]  | {apiproxy: .apiproxy, five_xx: ."sum(message_count)"}' |  awk '/}/{print $0 ","; next}1' |  sed '$ s/.$//' | awk 'BEGINFILE{print "["};ENDFILE{print "]"};1' > ${biq_5xx_metrics}
-          # if [ -f "merged_with_4xx.out" ]; then
-          #   echo "4xx and 5xx found... merging merged_with_4xx.out and jq_processed_5xx_response.out "
-          #   # If 4xx error is found, this condition will be met, it will merge all 3 outputs (i.e main metrified_response.out file, 4xx and 5xx)
-          #   IOFileJoiner jq_processed_5xx_response.out merged_with_4xx.out ${merged_metric_file}
-          #  else
-          #     # this condition will only be satisifed if 4xx does not exist, this will result in merging only
-          #     # 5xx response to the main jq_processed_response.out file.
-          #     echo "4xx not found, but 5xx exist... merging metrified_response.out and jq_processed_5xx_response.out "
-          #     IOFileJoiner jq_processed_5xx_response.out metrified_response.out ${merged_metric_file}
-          # fi
+
         fi
 
         generic_metric_path="name=${metric_prefix}|${server_friendly_name}|${metric_base}|${environments}"
@@ -413,18 +437,42 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
           avg_total_response_time=$(echo "${response_content}" | awk '{print $7}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
           avg_target_response_time=$(echo "${response_content}" | awk '{print $8}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
           avg_request_processing_latency=$(echo "${response_content}" | awk '{print $9}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+          #additional metrics - 25/03/2020 
+          min_request_processing_latency=$(echo "${response_content}" | awk '{print $10}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+          max_request_processing_latency=$(echo "${response_content}" | awk '{print $11}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+
+          max_target_response_time=$(echo "${response_content}" | awk '{print $12}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+          min_target_response_time=$(echo "${response_content}" | awk '{print $13}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+        
+          min_total_response_time=$(echo "${response_content}" | awk '{print $14}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+          max_total_response_time=$(echo "${response_content}" | awk '{print $15}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+          
+          sum_policy_error=$(echo "${response_content}" | awk '{print $16}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+          sum_target_error=$(echo "${response_content}" | awk '{print $17}' | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
+
           #parameterising the paths to make it easier to manager in the future
           name_path="${generic_metric_path}|${identifier}"
           echo "$name_path|Availability, value=1"
           echo "$name_path|Total Message Count, value=${message_count}"
           echo "$name_path|Total Error Count, value=${error_count}"
-          echo "$name_path|Global Average Response Time, value=${global_avg_total_response_time}"
-          echo "$name_path|Global Request Processing Latency, value=${global_avg_request_processing_latency}"
-          echo "$name_path|Global Average Target Response Time, value=${global_avg_target_response_time}"
-          echo "$name_path|Average Total Response Time, value=${avg_total_response_time}"
-          echo "$name_path|Average Target Response Time, value=${avg_target_response_time}"
-          echo "$name_path|Average Request Processing Latency, value=${avg_request_processing_latency}"
+          echo "$name_path|Total Policy Errors, value=${sum_policy_error}"
+          echo "$name_path|Total Target Errors, value=${sum_target_error}"
 
+          echo "$name_path|Global Average Response Time, value=${global_avg_total_response_time}"
+          echo "$name_path|Average Total Response Time, value=${avg_total_response_time}"
+          echo "$name_path|Minimum Total Response Time, value=${min_total_response_time}"
+          echo "$name_path|Maximum Total Response Time, value=${max_total_response_time}"
+     
+          echo "$name_path|Global Request Processing Latency, value=${global_avg_request_processing_latency}"
+          echo "$name_path|Average Request Processing Latency, value=${avg_request_processing_latency}"
+          echo "$name_path|Minimum Request Processing Latency, value=${min_request_processing_latency}"
+          echo "$name_path|Maximum Request Processing Latency, value=${max_request_processing_latency}"
+          
+          echo "$name_path|Global Average Target Response Time, value=${global_avg_target_response_time}"
+          echo "$name_path|Average Target Response Time, value=${avg_target_response_time}"
+          echo "$name_path|Minimum Target Response Time, value=${min_target_response_time}"
+          echo "$name_path|Maximum Target Response Time, value=${max_target_response_time}"
+         
           sum_of_messages=$(($sum_of_messages + $message_count))
           sum_of_errors=$(($sum_of_errors + ${error_count}))
           overrall_response_time=$(($overrall_response_time + $avg_total_response_time))
@@ -433,9 +481,9 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
 
         avg=$(($overrall_response_time / $i))
         rounded_avg=$(echo ${avg} | awk '{print ($1-int($1)<0.499)?int($1):int($1)+1}')
-        echo "$generic_metric_path|Overall Average Response Time, value=${rounded_avg}"
-        echo "$generic_metric_path|Message Count Sum, value=${sum_of_messages}"
-        echo "$generic_metric_path|Error Count Sum, value=${sum_of_errors}"
+        echo "$generic_metric_path|Average Response Time, value=${rounded_avg}"
+        echo "$generic_metric_path|Total Message Count, value=${sum_of_messages}"
+        echo "$generic_metric_path|Total Error Count, value=${sum_of_errors}"
 
         #Processing 4xx metrics for AppDynamics
         if [ "${found_4xx}" = "true" ]; then
@@ -450,7 +498,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
             #Calaculate Sum of all 5XX errors
             sum_of_four_xx=$((${sum_of_four_xx} + ${four_xx_count}))
           done <jq_processed_4xx_response.out
-          echo "$generic_metric_path|4XX Sum, value=${sum_of_four_xx}"
+          echo "$generic_metric_path|Total 4XX, value=${sum_of_four_xx}"
         fi
 
         #Processing 5xx metrics for AppDynamics
@@ -467,12 +515,11 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
             #Calaculate Sum of all 5XX errors
             sum_of_five_xx=$((${sum_of_five_xx} + ${five_xx_count}))
           done <jq_processed_5xx_response.out
-          echo "$generic_metric_path|5XX Sum, value=${sum_of_five_xx}"
+          echo "$generic_metric_path|Total 5XX, value=${sum_of_five_xx}"
         fi
 
         #2.Processing HTTP Status Code Response Codes
         #clean up, but leave response.json to help troubleshoot any issues with this script and/or Apigee's response
-
         rm jq_processed_*.out metrified_response.out 
 
         #Send anaytics events
