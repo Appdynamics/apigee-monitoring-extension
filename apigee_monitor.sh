@@ -76,15 +76,19 @@ IOcURL() {
   response=$(curl -u "${2}":"${3}" -s -w "%{http_code}" -o "${4}" -X GET "${1}")
 }
 
-function JSONProccessor(){
+function JSONProccessor {
  jq '
-  def summarize:
-    if .name | test("^sum", "") then
-      {"\(.name)": (.values | add)}                           # sum
-    elif .name | test("^avg|^global-avg", "") then
-      {"\(.name)": ((.values | add) / (.values | length)) }   # average
+  def myMathFunc:
+    if (.name | test("^sum")) then
+      {"\(.name)": (.values | add)}                           
+    elif (.name | test("^avg|^global-avg")) then
+      {"\(.name)": ((.values | add) / (.values | length)) }   
+    elif (.name | test("^max")) then
+      {"\(.name)": (.values | max) }   
+    elif (.name | test("^min")) then
+      {"\(.name)": (.values | min) } 
     else
-      {"\(.name)": .values[]}                                 # pass through unmodified
+      {"\(.name)": .values[]}                              
     end;
 
    [
@@ -92,12 +96,11 @@ function JSONProccessor(){
   .identifier.names[] as $name |
   .identifier.values[] as $val |
   {"\($name)": "\($val)"} + ([
-    .metric[] | summarize
+    .metric[] | myMathFunc
   ] | add)
 ]
 '  < ${1} > ${2}
 }
-
 #Initialise log with version
 echo "{$version}" >>${log_path}
 

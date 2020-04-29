@@ -9,21 +9,22 @@ The Apigee monitoring extension help AppDynamics customers to quickly isolate th
 
 The extension now supports monitoring for multiple Apigee instances, environments and orgs - in any combination of your choice.
  
-**Metrics** that are collected for each API proxy are :
+ The following Apigee proxy metrics are monitored by this AppDynamics monitoring solution: 
 
 1. **Response Time:**  Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 2. **Target Response Time:**  Number of milliseconds it took your target server or service to respond to a call. This number tells you how your own services are behaving.
 3. **Min and Max of Target Response Time:**  The Minimum and Maximum Target Response Time over in the given query period
-3. **Overall Average Response Time:**  Overall Average Response Time for all proxies - it's calculated by summing the response times and divided by the number of proxies available at the time. 
-4. **Request Processing Latency:** Number of milliseconds from the time when a call reaches the selected API proxy to the time when Apigee sends the call to your target server.
+4. **Overall Average Response Time:**  Overall Average Response Time for all proxies - it's calculated by summing the response times and divided by the number of proxies available at the time. 
+5. **Request Processing Latency:** Number of milliseconds from the time when a call reaches the selected API proxy to the time when Apigee sends the call to your target server.
  **Min and Max of Processing Latency:**  The Minimum and Maximum Processing Latency values over the query period
-5. **Traffic:** The number of recorded API requests for each API proxy
-6. **Error:**  The total number of times API proxies failed over the specified period. Proxy failure can occur when a policy fails or when there's a runtime 
-7. **Error Count Sum:** Summation of errors for all API proxies  
-8. **4XX Count:** The total number of 4XX HTTP Response Code for each API proxy 
-9. **4XX Sum:** Summation of 4XX HTTP Response Codes in all API proxies
-10. **5XX Count:** The total number of 5XX HTTP Response Code for each API proxy 
-11. **5XX Sum:** Summation of 5XX HTTP Response Codes for all API proxies
+6. **Traffic:** The number of recorded API requests for each API proxy
+7. **Error:**  The total number of times API proxies failed over the specified period. Proxy failure can occur when a policy fails or when there's a runtime 
+8. **Policy Error:**  The total number of times API proxy policy failed
+9. **Error Count Sum:** Summation of errors for all API proxies  
+10. **4XX Count:** The total number of 4XX HTTP Response Code for each API proxy 
+11. **4XX Sum:** Summation of 4XX HTTP Response Codes in all API proxies
+12. **5XX Count:** The total number of 5XX HTTP Response Code for each API proxy 
+13. **5XX Sum:** Summation of 5XX HTTP Response Codes for all API proxies
 
 
 ## Prerequisite ###
