@@ -5,6 +5,8 @@ version="[ApigeeMonitore v3.0 Build Date 2020-04-01 4:11 pm]"
 
 [[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
 
+[[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
+
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 # 2) Target Response Time:	Number of milliseconds it took your target server to respond to a call. This number tells you how your own servers are behaving.
@@ -76,15 +78,19 @@ IOcURL() {
   response=$(curl -u "${2}":"${3}" -s -w "%{http_code}" -o "${4}" -X GET "${1}")
 }
 
-function JSONProccessor(){
+function JSONProccessor {
  jq '
-  def summarize:
-    if .name | test("^sum", "") then
-      {"\(.name)": (.values | add)}                           # sum
-    elif .name | test("^avg|^global-avg", "") then
-      {"\(.name)": ((.values | add) / (.values | length)) }   # average
+  def myMathFunc:
+    if (.name | test("^sum")) then
+      {"\(.name)": (.values | add)}                           
+    elif (.name | test("^avg|^global-avg")) then
+      {"\(.name)": ((.values | add) / (.values | length)) }   
+    elif (.name | test("^max")) then
+      {"\(.name)": (.values | max) }   
+    elif (.name | test("^min")) then
+      {"\(.name)": (.values | min) } 
     else
-      {"\(.name)": .values[]}                                 # pass through unmodified
+      {"\(.name)": .values[]}                              
     end;
 
    [
@@ -92,12 +98,11 @@ function JSONProccessor(){
   .identifier.names[] as $name |
   .identifier.values[] as $val |
   {"\($name)": "\($val)"} + ([
-    .metric[] | summarize
+    .metric[] | myMathFunc
   ] | add)
 ]
 '  < ${1} > ${2}
 }
-
 #Initialise log with version
 echo "{$version}" >>${log_path}
 
