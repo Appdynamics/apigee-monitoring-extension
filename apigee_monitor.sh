@@ -1,7 +1,9 @@
 #!/bin/sh
 
 #Author : Israel.Ogbole@appdynamics.com
-version="[ApigeeMonitore v2.6.0 Build Date 2020-03-18 12:59]"
+version="[ApigeeMonitore v3.0 Build Date 2020-04-01 4:11 pm]"
+
+[[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
 
 [[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
 
