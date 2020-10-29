@@ -99,7 +99,7 @@ CheckDependencies() {
   if ! command -v curl >/dev/null 2>&1; then
     exit_with_error "curl command unavailable" ${ERR_DEPS}
   elif ! command -v "jq" >/dev/null 2>&1; then
-    ExitWithError "jq command unavailable" ${ERR_DEPS}
+    exit_with_error "jq command unavailable" ${ERR_DEPS}
   fi
 }
 
