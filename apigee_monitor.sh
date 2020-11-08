@@ -3,8 +3,6 @@
 #Author : Israel.Ogbole@appdynamics.com
 version="[ApigeeMonitore v3.2 Build Date 2020-04-29 3:14 pm]"
 
-[[ "$(command -v jq)" ]] || { echo "jq is not installed, please download it from - https://stedolan.github.io/jq/download/ and try again after installing it. Aborting.." 1>&2 ; sleep 5; exit 1; }
-
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 # 2) Target Response Time:	Number of milliseconds it took your target server to respond to a call. This number tells you how your own servers are behaving.
@@ -62,6 +60,8 @@ merged_metric_file="merged_metric_file.out"
 found_4xx="false"
 found_5xx="false"
 
+readonly ERR_DEPS=0
+
 #takes 3 params in this order 1. requst url 2. username 3. password
 IOcURL() {
   #clean up any orphaned file from the previous run.
@@ -76,7 +76,34 @@ IOcURL() {
   response=$(curl -u "${2}":"${3}" -s -w "%{http_code}" -o "${4}" -X GET "${1}")
 }
 
-function JSONProccessor {
+# Prints an error message with an 'ERROR' prefix to stderr.
+#
+# Args:
+#   $1 - error message.
+error_msg() {
+  echo "ERROR: $1" >&2
+}
+
+# Prints an error message followed by an exit.
+#
+# Args:
+#   $1 - error message.
+#   $2 - exit code to use.
+exit_with_error() {
+  error_msg "$1"
+  exit "$2"
+}
+
+# Checks if packages are installed.
+CheckDependencies() {
+  if ! command -v curl >/dev/null 2>&1; then
+    exit_with_error "curl command unavailable" ${ERR_DEPS}
+  elif ! command -v "jq" >/dev/null 2>&1; then
+    exit_with_error "jq command unavailable" ${ERR_DEPS}
+  fi
+}
+
+JSONProccessor() {
  jq '
   def myMathFunc:
     if (.name | test("^sum")) then
@@ -101,6 +128,10 @@ function JSONProccessor {
 ]
 '  < ${1} > ${2}
 }
+
+#Check package dependencies before running the script
+CheckDependencies
+
 #Initialise log with version
 echo "{$version}" >>${log_path}
 
