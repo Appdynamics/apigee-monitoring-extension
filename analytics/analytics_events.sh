@@ -34,7 +34,7 @@ echo "Proxy port - $proxy_port"
  fi
 
 if [ ! -f "${markerfile}" ]; then
-   curl_response_code=$(curl -X POST "${analytics_ep}/events/schema/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type: application/vnd.appd.events+json;v=2" --data @${schema_template} -s -w "%{http_code}" $proxy_details)
+   curl_response_code=$(curl -X POST "${analytics_ep}/events/schema/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type: application/vnd.appd.events+json;v=2" --data @${schema_template} -s -w "%{http_code}" --connect-timeout=30  $proxy_details)
    echo "Create Schema response code $curl_response_code" 
 
    if [ "${curl_response_code}" -eq 201 ]; then
@@ -91,7 +91,7 @@ if [ ! -f "${biq_request_payload}" ]; then
     echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg} " >>${log_path}
     exit 0
 else
-    curl_response_code=$(curl -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type:application/vnd.appd.events+json;v=2" -H"Accept:application/json"  -d "$(cat ${biq_request_payload})" -s -w "%{http_code}" $proxy_details)
+    curl_response_code=$(curl -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type:application/vnd.appd.events+json;v=2" -H"Accept:application/json"  -d "$(cat ${biq_request_payload})" -s -w "%{http_code}" --connect-timeout=30 $proxy_details)
     echo "response code = $curl_response_code" 
     if [ "${curl_response_code}" -eq 200 ]; then
         msg="Succesfully sent analytics event to AppDynamics."
