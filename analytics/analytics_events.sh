@@ -2,7 +2,7 @@
 
 #Send Analytics Events to AppD
 schema_template="analytics/schema.json"
-markerfile="analytics/schema.markerfile" # The existence of this this file will prevent the creation of new schema
+markerfile="analytics/schema.markerfile" # The existence of this file will prevent the creation of a new schema. Delete it if a new schema  is required.
 biq_request_payload="biq_request_payload.json"
 schema_name=$(jq -r  '.analytics_details[].schema_name' <  ${apigee_conf_file})
 
