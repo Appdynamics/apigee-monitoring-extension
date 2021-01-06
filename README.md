@@ -53,6 +53,7 @@ The extension now supports monitoring for multiple Apigee instances, environment
   | analytics_key | Create the analytics API Key by following the instruction in this [doc](https://docs.appdynamics.com/display/latest/Managing+API+Keys).  Grant Manage, Query and Publish permissions to Custom |
   | proxy_url  | Define proxy host if in use, otherwise leave blank.  |
   | proxy_port | Define proxy port if `proxy_url` is not blank |
+  | schema_name  |Define the custom analytics schema name. Schema names must be unique per controller |
 
 3. Version 2.0 and above of this extension support monitoring of multiple Apigee instances, environments or organisations. To do this, add an element to the connection details array as shown below. Note, use a unique `server_friendly_name` for each entry. 
 `````
