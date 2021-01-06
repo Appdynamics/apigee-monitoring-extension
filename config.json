@@ -28,6 +28,7 @@
   "analytics_details":[
     {
       "analytics_endpoint":"https://analytics.api.appdynamics.com",
+      "schema_name":"apigee_metrics",
       "proxy_url":"",
       "proxy_port":"",
       "global_account_name":"customer1_GUID",

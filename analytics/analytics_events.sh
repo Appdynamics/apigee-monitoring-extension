@@ -1,10 +1,10 @@
 #!/bin/sh
 
 #Send Analytics Events to AppD
-schema_name="apigee_metrics"
 schema_template="analytics/schema.json"
-markerfile="analytics/schema.markerfile"
+markerfile="analytics/schema.markerfile" # The existence of this file will prevent the creation of a new schema. Delete it if a new schema  is required.
 biq_request_payload="biq_request_payload.json"
+schema_name=$(jq -r  '.analytics_details[].schema_name' <  ${apigee_conf_file})
 
 analytics_ep=$(jq -r  '.analytics_details[].analytics_endpoint' < ${apigee_conf_file})
 analytics_key=$(jq -r  '.analytics_details[].analytics_key' <  ${apigee_conf_file})
@@ -19,6 +19,8 @@ echo "global account name - $global_account_name"
 echo "Proxy URL - $proxy_url"
 echo "Proxy port - $proxy_port"
 echo "connection_timeout_seconds - $connection_timeout_seconds"
+echo "schema_name - $schema_name"
+
 
  if [ -z "$analytics_ep" ] || [ -z "$analytics_key" ] || [ -z "$global_account_name" ] ; then 
      msg=" analytics endpoint, analytics key and global account name must be filled in the config.json file - if BiQ is enabled"
