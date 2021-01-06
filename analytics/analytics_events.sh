@@ -11,22 +11,30 @@ analytics_key=$(jq -r  '.analytics_details[].analytics_key' <  ${apigee_conf_fil
 global_account_name=$(jq -r  '.analytics_details[].global_account_name' <  ${apigee_conf_file})
 proxy_url=$(jq -r  '.analytics_details[].proxy_url' <  ${apigee_conf_file})
 proxy_port=$(jq -r  '.analytics_details[].proxy_port' <  ${apigee_conf_file})
+connection_timeout_seconds=$(jq -r  '.analytics_details[].connection_timeout_seconds' <  ${apigee_conf_file})
 
 echo "endpoint - $analytics_ep "
 echo  "key -  ***"
 echo "global account name - $global_account_name"
 echo "Proxy URL - $proxy_url"
 echo "Proxy port - $proxy_port"
+echo "connection_timeout_seconds - $connection_timeout_seconds"
 echo "schema_name - $schema_name"
 
- if [ -z $analytics_ep ] || [ -z $analytics_key ] || [ -z $global_account_name ] ; then 
+
+ if [ -z "$analytics_ep" ] || [ -z "$analytics_key" ] || [ -z "$global_account_name" ] ; then 
      msg=" analytics endpoint, analytics key and global account name must be filled in the config.json file - if BiQ is enabled"
      echo "${msg}"
      echo "[$(date '+%d-%m-%Y %H:%M:%S')] [FATAL] ${msg}" >> ${log_path}
      exit 0
  fi  
 
- if [ -z $proxy_url ] || [ -z $proxy_port ]; then 
+  if [ -z "$connection_timeout_seconds" ] || [ -z "$connection_timeout_seconds" ]; then 
+     connection_timeout_seconds=30 #Defaults to 30 seconds if not defined
+     echo "Connection timeout not defined, assigned the default value - $connection_timeout_seconds"
+  fi 
+
+ if [ -z "$proxy_url" ] || [ -z "$proxy_port" ]; then 
     echo "Not Using proxy" 
     proxy_details=""
   else 
@@ -35,7 +43,7 @@ echo "schema_name - $schema_name"
  fi
 
 if [ ! -f "${markerfile}" ]; then
-   curl_response_code=$(curl -X POST "${analytics_ep}/events/schema/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type: application/vnd.appd.events+json;v=2" --data @${schema_template} -s -w "%{http_code}" $proxy_details)
+   curl_response_code=$(curl -X POST "${analytics_ep}/events/schema/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type: application/vnd.appd.events+json;v=2" --data @${schema_template} -s -w "%{http_code}" --connect-timeout $connection_timeout_seconds  $proxy_details)
    echo "Create Schema response code $curl_response_code" 
 
    if [ "${curl_response_code}" -eq 201 ]; then
@@ -92,7 +100,7 @@ if [ ! -f "${biq_request_payload}" ]; then
     echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg} " >>${log_path}
     exit 0
 else
-    curl_response_code=$(curl -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type:application/vnd.appd.events+json;v=2" -H"Accept:application/json"  -d "$(cat ${biq_request_payload})" -s -w "%{http_code}" $proxy_details)
+    curl_response_code=$(curl -X POST "${analytics_ep}/events/publish/$schema_name" -H"X-Events-API-AccountName:${global_account_name}" -H"X-Events-API-Key:${analytics_key}" -H"Content-type:application/vnd.appd.events+json;v=2" -H"Accept:application/json"  -d "$(cat ${biq_request_payload})" -s -w "%{http_code}" --connect-timeout $connection_timeout_seconds $proxy_details)
     echo "response code = $curl_response_code" 
     if [ "${curl_response_code}" -eq 200 ]; then
         msg="Succesfully sent analytics event to AppDynamics."
@@ -101,7 +109,7 @@ else
         #clean up  
         rm biq_*.json decorated_biq_*.json raw_biq_prepped*.json
     else 
-        msg="Response code: ${curl_response_code}. Failed to send analytics event to AppDynamics, please ensure your credentials are correct"
+        msg="Response code: ${curl_response_code}. Failed to send analytics event to AppDynamics. Note the HTTP response code and send it to support."
         echo "${msg}"
         echo "[$(date '+%d-%m-%Y %H:%M:%S')] [ERROR] ${msg}" >> ${log_path}
 

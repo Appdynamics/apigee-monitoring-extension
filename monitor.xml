@@ -11,7 +11,7 @@
         <type>executable</type>
         <execution-style>periodic</execution-style>
         <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
-        <execution-timeout-in-secs>60</execution-timeout-in-secs>
+        <execution-timeout-in-secs>300</execution-timeout-in-secs>
         <task-arguments>
             <argument name="file_path" is-required="true" default-value="apiproxy.conf"/>
         </task-arguments>
