@@ -31,7 +31,8 @@
       "proxy_url":"",
       "proxy_port":"",
       "global_account_name":"customer1_GUID",
-      "analytics_key":"Generated analytics key"
+      "analytics_key":"Generated analytics key",
+      "connection_timeout_seconds": 30
     }
   ]
 }
