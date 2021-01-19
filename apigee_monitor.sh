@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Author : Israel.Ogbole@appdynamics.com
-version="[ApigeeMonitore v21.1.0  Build Date 2021-01-19]"
+version="[ApigeeMonitore v21.1.1  Build Date 2021-01-19]"
 
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
