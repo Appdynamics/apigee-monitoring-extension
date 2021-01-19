@@ -9,7 +9,7 @@ The Apigee monitoring extension help AppDynamics customers to quickly isolate th
 
 The extension now supports monitoring for multiple Apigee instances, environments and orgs - in any combination of your choice.
  
- The following Apigee proxy metrics are monitored by this AppDynamics monitoring solution: 
+ The following Apigee proxy metrics are monitored by this AppDynamics monitoring solution:
 
 1. **Response Time:**  Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
 2. **Target Response Time:**  Number of milliseconds it took your target server or service to respond to a call. This number tells you how your own services are behaving.
@@ -37,23 +37,25 @@ The extension now supports monitoring for multiple Apigee instances, environment
 1. Unzip the attached file into $MACHINE_AGENT_HOME/monitors 
 2. Using your favourite text editor, open config.json and fill in the configuration properties:
 
+
   | **Config Property Name** | **Description** |
   | --- | --- |
   | host_url  | Apigee host url, including the port number if required. |
+  | query_interval_in_secs  | Determines how far back you want to query Apigee during the initial run |
   | metric_prefix  | Define metrics prefix, for example:  `Server|Component:<tier-name>|Custom Metrics|Apigee ` . Please do not add `|` at the end. |
   | org  | Select the organization that contains the proxies you would like to monitor |
   | env  | Select the environment that contains the proxies you would like to monitor. prod, Dev, Prod, etc.  |
   | server_friendly_name  | An free text indicator that best describes your Apigee environment, org, or environment. use - or _ to separate words, not spaces |
   | username | Username of the read-only service account  |
   | password | Password of the read-only service account |
-  | use_proxy-filter  | If set to true, the monitoring extension will only collect metrics for proxies that are defined in the `apipproxy.conf` file |
+  | use_proxy_filter | If set to true, the monitoring extension will only collect metrics for proxies that are defined in the `apipproxy.conf` file |
   | enable_BiQ  | If set to true, the monitoring extension will send proxy and target response codes to BiQ platform. This requires BiQ license|
   | analytics_endpoint  | This is the analytics endpoint of your controller. This differs depending on the location of your controller. Please refer to this [doc](https://docs.appdynamics.com/display/PAA/Onprem-DC1+Domains+and+IP+Ranges). |
   | global_account_name  | You can get the global account name to use from the [License page](https://docs.appdynamics.com/display/latest/License+Management)  |
   | analytics_key | Create the analytics API Key by following the instruction in this [doc](https://docs.appdynamics.com/display/latest/Managing+API+Keys).  Grant Manage, Query and Publish permissions to Custom |
   | proxy_url  | Define proxy host if in use, otherwise leave blank.  |
   | proxy_port | Define proxy port if `proxy_url` is not blank |
-  | schema_name  |Define the custom analytics schema name. Schema names must be unique per controller |
+  | schema_name  |Define the custom analytics schema name. Schema names must be unique per controller |  
 
 3. Version 2.0 and above of this extension support monitoring of multiple Apigee instances, environments or organisations. To do this, add an element to the connection details array as shown below. Note, use a unique `server_friendly_name` for each entry. 
 `````

@@ -1,0 +1,27 @@
+{
+    "schema": {
+        "apiproxy": "string",
+        "four_xx": "float",
+        "five_xx": "float",
+        "message_count": "float",
+        "global_avg_request_processing_latency": "float",
+        "total_response_time": "float",
+        "global_avg_target_response_time": "float",
+        "error_count": "float",
+        "global_avg_total_response_time": "float",
+        "target_response_time": "float",
+        "request_processing_latency": "float",
+        "server_friendly_name": "string",
+        "environment": "string",
+        "organization": "string",
+        "min_request_processing_latency":"float",
+        "max_request_processing_latency":"float",
+        "min_target_response_time":"float",
+        "max_target_response_time":"float",
+        "min_total_response_time": "float",
+        "max_total_response_time": "float", 
+        "policy_error":"float",
+        "target_error": "float"
+    }
+}
+

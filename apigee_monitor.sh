@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #Author : Israel.Ogbole@appdynamics.com
-version="[ApigeeMonitore v3.2 Build Date 2020-04-29 3:14 pm]"
+version="[ApigeeMonitore v21.1.0  Build Date 2021-01-19]"
 
 #This extension sends the following Apigee metrics to AppDynamics
 # 1) Response Time:	Total number of milliseconds it took to respond to a call. This time includes the Apigee API proxy overhead and your target server time.
@@ -33,6 +33,7 @@ metric_base="Proxies"
 proxy_conf_file_path="apiproxy.conf"
 apigee_conf_file="config.json"
 log_path="../../logs/apigee-monitor.log"
+timer_file="apigee_timer.db"
 
 real_time=true
 timeUnit="minute" #A value of second, minute, hour, day, week, month, quarter, year, decade, century, millennium.
@@ -184,10 +185,32 @@ echo ""
 #from_range=$(echo ${today}+${minutes_ago})
  #GNU date
 #or this if you're using Ubuntu, CentOS or Redhat
-to_range=$(date +%m/%d/%Y+%H:%M:%S)
-from_range=$(date +%m/%d/%Y+%H:%M:%S --date="$query_interval_in_secs seconds ago")
 
-echo "==> Time range: from ${from_range} to ${to_range}"
+#to_range=$(date +%m/%d/%Y+%H:%M:%S)
+
+if [ ! -f "${timer_file}" ]; then
+  #initial install
+  msg=" ${timer_file} does not exist. This is treated as an initial excution of v21.1.0 or higher."
+  echo "${msg}"
+  echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] ${msg}" >>${log_path}
+  #Create the timer file.
+  echo $(date +%m/%d/%Y+%H:%M:%S) > "${timer_file}"
+  to_range=$(<$timer_file)
+  # The query_interval_in_secs in ONLY used to determine how far back to query Apigee during the inital run of v21.1.0 or higher 
+  from_range=$(date +%m/%d/%Y+%H:%M:%S --date="${query_interval_in_secs} seconds ago")
+  else
+   #re-run 
+   # prev_run_time=$(cat "${timer_file}") #time of previous run 
+   from_range="$(<$timer_file)"
+   echo "$from_range"
+   #current time, but increment it by 1 second to aviod data overlap
+   echo $(date +%m/%d/%Y+%H:%M:%S --date="+1 sec")  > "${timer_file}"  
+   to_range="$(<$timer_file)"
+fi
+
+msg="Time range of this query: from ${from_range} to ${to_range}"
+echo "${msg}"
+echo "[$(date '+%d-%m-%Y %H:%M:%S')] [INFO] ${msg}" >>${log_path}
 
 # Read BiQ flag from config file
 enable_biq=$(jq -r '.enable_BiQ' <${apigee_conf_file})

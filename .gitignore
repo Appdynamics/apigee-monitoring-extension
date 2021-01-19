@@ -14,3 +14,5 @@ metrified_response.out
 biq_*.json
 decorated_biq_request_payload.json
 raw_biq_prepped_perf_metrics.json
+timer.txt
+apigee_timer.db
