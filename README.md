@@ -143,4 +143,4 @@ Metrics are located in Application Infrastructure Performance | Tier_NAME| Custo
 
 ### Contribution guidelines ###
 
-* Fork and submit PR 
+
