@@ -21,10 +21,15 @@ The extension now supports monitoring for multiple Apigee instances, environment
 8. **Error:**  The total number of times API proxies failed over the specified period. Proxy failure can occur when a policy fails or when there's a runtime 
 9. **Policy Error:**  The total number of times API proxy policy failed
 10. **Error Count Sum:** Summation of errors for all API proxies  
-11. **4XX Count:** The total number of 4XX HTTP Response Code for each API proxy 
-12. **Total 4XX:** Summation of 4XX HTTP Response Codes in all API proxies
-13. **5XX Count:** The total number of 5XX HTTP Response Code for each API proxy 
-14. **Total 5XX:** Summation of 5XX HTTP Response Codes for all API proxies
+11. **401 Count:** The total number of 401 HTTP Response Code for each API proxy
+12. **403 Count:** The total number of 403 HTTP Response Code for each API proxy
+13. **4XX Count:** The total number of 5XX HTTP Response Code for each API proxy 
+14. **Total 4XX:** Summation of 4XX HTTP Response Codes in all API proxies
+15. **502 Count:** The total number of 502 HTTP Response Code for each API proxy
+16. **503 Count:** The total number of 503 HTTP Response Code for each API proxy
+17. **504 Count:** The total number of 504 HTTP Response Code for each API proxy
+18. **5XX Count:** The total number of 5XX HTTP Response Code for each API proxy 
+19. **Total 5XX:** Summation of 5XX HTTP Response Codes for all API proxies
 
 ## Prerequisite ###
 1. This extension works only with the standalone Java machine agent. 
