@@ -81,30 +81,30 @@ The extension now supports monitoring for multiple Apigee instances, environment
 4. There are 2 types of APIGEE instances, SaaS and onprem. If ONPREM APIGEE instance then the Machine Agent needs to be running on a server in the same timezone as the APIGEE OnPrem Server. If it is an 'onprem', then set the to value in the config.json to:-
 
 
-`"apigee_timezone": "onprem",`
+    `"apigee_timezone": "onprem",`
 
 
-This means the API datetime query to the APIGEE API will be set in server's 'local-time'.
-
-
-
-All APIGEE SaaS environments run as UTC time, so if you are monitoring a SaaS instance then set the value to:-
+    This means the API datetime query to the APIGEE API will be set in server's 'local-time'.
 
 
 
-`"apigee_timezone": "saas",`
+    All APIGEE SaaS environments run as UTC time, so if you are monitoring a SaaS instance then set the value to:-
 
 
 
-which will switches the API query datetime to UTC time.
+    `"apigee_timezone": "saas",`
 
 
-Failure to set these correctly depending on the APIGEE environment will mean you could be querying a time that is in the future or the wrong time to what the APIGEE instance runs as.
 
-**IMPORTANT NOTE:-**
-THE 2 TYPE OF APIGEE ENVIRONMENTS I.E. SAAS AND ONPREM CAN'T NOT TO CONFIGURED IN 1 APIGEE EXTENSION INSTANCE ON A MACHINE AGENT. IF YOU NEED TO MONITOR THE 2 TYPES OF APIGEE ENVIRONMENTS, I.E. SAAS AND ONPREM,THEN YOU WILL NEED HAVE 2 INSTANCES OF THE EXTENSION WHICH CAN COEXIST AND RUN ON THE SAME MACHINE AGENT. THIS IS BECAUSE:-
-  1) THE EXTENSION RUNS EVERY 60 SECONDS, AND IT MUST COMPLETE WITHIN THAT TIME SO THE NEXT INTERVAL CAN RUN. IT ALSO TAKES MORE TIME WITH THE ADDITIONAL API QUERY FILTERING BASED ON ERROR CODES MEANS ADDING ANOTHER INSTANCE WILL DOUBLE THE TIME TO COMPLETE.
-  2) THE SCRIPT CURRENT LOGIC ONLY HAS ALLOWS ONE TIMEZONE TYPE TO BE CONFIG PER EXTENSION.
+    which will switches the API query datetime to UTC time.
+
+
+    Failure to set these correctly depending on the APIGEE environment will mean you could be querying a time that is in the future or the wrong time to what the APIGEE instance runs as.
+
+    **IMPORTANT NOTE:-**
+    THE 2 TYPE OF APIGEE ENVIRONMENTS I.E. SAAS AND ONPREM CAN'T NOT TO CONFIGURED IN 1 APIGEE EXTENSION INSTANCE ON A MACHINE AGENT. IF YOU NEED TO MONITOR THE 2 TYPES OF APIGEE ENVIRONMENTS, I.E. SAAS AND ONPREM,THEN YOU WILL NEED HAVE 2 INSTANCES OF THE EXTENSION WHICH CAN COEXIST AND RUN ON THE SAME MACHINE AGENT. THIS IS BECAUSE:-
+      1) THE EXTENSION RUNS EVERY 60 SECONDS, AND IT MUST COMPLETE WITHIN THAT TIME SO THE NEXT INTERVAL CAN RUN. IT ALSO TAKES MORE TIME WITH THE ADDITIONAL API QUERY FILTERING BASED ON ERROR CODES MEANS ADDING ANOTHER INSTANCE WILL DOUBLE THE TIME TO COMPLETE.
+      2) THE SCRIPT CURRENT LOGIC ONLY HAS ALLOWS ONE TIMEZONE TYPE TO BE CONFIG PER EXTENSION.
 
 
 5. We've added the ability to encode the password for added security. This extension supports base64 password encoding. For example:
@@ -119,13 +119,13 @@ THE 2 TYPE OF APIGEE ENVIRONMENTS I.E. SAAS AND ONPREM CAN'T NOT TO CONFIGURED I
 
     or else leave set to `false` so password is clear text.
 
-4. If `use_proxy_filter` is set to true, list the target proxies in the `apipproxy.conf` file - one item per line. 
+6. If `use_proxy_filter` is set to true, list the target proxies in the `apipproxy.conf` file - one item per line. 
 
   *Note: user_proxy_filter, when set to true will ONLY send API performance metrics for the predefined proxies in the
    apiproxy.conf file. If set to false, performance data for ALL apigee proxies in the `org` and `env` will be collected.* 
 
-5. Test it: `./apigee_monitor.sh`
-6. If everything is OK, you should see an output in stdout that is similar to this: 
+7. Test it: `./apigee_monitor.sh`
+8. If everything is OK, you should see an output in stdout that is similar to this: 
 `````
 sending request to Apigee.... 
 Using un-filtered request - collecting all proxy information
@@ -160,7 +160,7 @@ name=Server|Component:<tier-name>|Custom Metrics|Apigee|Onpremise-DC1|Proxies|pr
 `````
 Do not proceed until you get an output similar to the above. 
 
-6. Restart the machine agent 
+9. Restart the machine agent 
 
 Note: The Global* metric is synonymous with AppDynamics baseline metric. We recommend that you use the non-Global metrics for your health rule metrics. 
 
