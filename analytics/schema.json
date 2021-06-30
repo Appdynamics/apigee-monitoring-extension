@@ -1,8 +1,13 @@
 {
     "schema": {
         "apiproxy": "string",
-        "four_xx": "float",
-        "five_xx": "float",
+        "error_401": "float",
+        "error_403": "float",
+        "error_4xx": "float",
+        "error_502": "float",
+        "error_503": "float",
+        "error_504": "float",
+        "error_5xx": "float",
         "message_count": "float",
         "global_avg_request_processing_latency": "float",
         "total_response_time": "float",

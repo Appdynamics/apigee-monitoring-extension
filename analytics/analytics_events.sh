@@ -57,37 +57,18 @@ else
 fi
 
 #normalize the JSON payload from Apigee response to match AppDynamics Schema. 
-
- if [ "${found_4xx}" = "true" ] && [ "${found_5xx}" = "true" ]; then
-    echo "merging all 3 json files"
-    jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]'  ${biq_4xx_metrics} ${biq_5xx_metrics}  > temp_${biq_request_payload}
-    sleep 1
-    jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]'  temp_${biq_request_payload} ${biq_perf_metrics}  > ${biq_request_payload}
-
-    rm temp_${biq_request_payload}
- fi
-
-if [ "${found_4xx}" = "true" ] && [ "${found_5xx}" = "false" ]; then
-    echo "merging only 4xx file"
-     jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]' ${biq_perf_metrics} ${biq_4xx_metrics}  > ${biq_request_payload}
+######### APIPROXY #############
+# #normalize the JSON payload from Apigee response to match AppDynamics Schema. 
+if [ "${found_401}" = "true" ] || [ "${found_403}" = "true" ] || [ "${found_4xx}" = "true" ] || [ "${found_502}" = "true" ] || [ "${found_503}" = "true" ] || [ "${found_504}" = "true" ] || [ "${found_5xx}" = "true" ]; then
+     echo "Some 4xx or 5xx error files are found..merging json"
+     jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]'  biq_prepped*.json  > temp_${biq_request_payload}
+else
+     echo "No 4xx or 5xx error file are found..nothing to merge"
+     biq_request_payload = ${biq_perf_metrics}
 fi
 
-if [ "${found_4xx}" = "false" ] && [ "${found_5xx}" = "true" ]; then
-    echo "merging only 5xx file"
-    jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]' ${biq_perf_metrics} ${biq_5xx_metrics}  > ${biq_request_payload}
-fi
-
-if [ "${found_4xx}" = "false" ] && [ "${found_5xx}" = "false" ]; then
-   echo "No 5xx or 4xx error - nothing to merge"
-   biq_request_payload=${biq_request_payload}
-fi
-# if [ "${found_4xx}" = "true" ] || [ "${found_5xx}" = "true" ]; then
-#     echo "4xx or 5xx is found..merging json"
-#     jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]'  biq_prepped*.json  > ${biq_request_payload}    
-# else
-#     echo "No 4xx or 5xx is found..nothing to merge"
-#     biq_request_payload = ${biq_perf_metrics}
-# fi
+jq -s '[ .[0] + .[1] | group_by(.apiproxy)[]  | add ]'  temp_${biq_request_payload} ${biq_perf_metrics}  > ${biq_request_payload}
+rm temp_${biq_request_payload}
 
 #decorate biq payload
 cat ${biq_request_payload} | sed 's/min(/min_/g; s/max(/max_/g; s/is_error/error_count/g; s/)//g;s/sum(//g; s/)//g; s/avg(//g; s/-/_/g' > "decorated_${biq_request_payload}"
