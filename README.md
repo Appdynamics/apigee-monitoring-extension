@@ -142,9 +142,7 @@ Metrics are located in Application Infrastructure Performance | Tier_NAME| Custo
 
 2. Check the analytics page in Apigee and ensure you can see performance data for the proxy APIs in the correct org and env 
 
-3. Send a manual curl request to your apigee instance to verify it's working
-
-4. If you need to contact support, reload the Apigee analytics page, save [HTTP HAR file](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-create-a-HAR-File-to-troubleshoot-web-download-issues/ta-p/23373) and attach it to the support case. 
+3. Send a manual curl request to your apigee instance to verify it's working 
 
 ### Contribution guidelines ###
 
