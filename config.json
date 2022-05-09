@@ -1,39 +1,33 @@
 {
-"metric_prefix":"Server|Component:<tier-name>|Custom Metrics|Apigee",
-"query_interval_in_secs": 90,
-"query_limit": 120,
+  "metric_prefix":"Server|Component:<tier-name>|Custom Metrics|Apigee",
+  "query_interval_in_secs":60,
+  "apigee_query_delay_secs": 120,
+  "query_limit": 120,
+  "apigee_timezone": "saas",
 
- "connection_details": [
-    {
-      "host_url": "https://api.enterprise.apigee.com",
-      "org": "israelo-70230-eval",
-      "env": "prod",
-      "server_friendly_name": "SaaS",
-      "username": "username",
-      "use_proxy_filter": false,
-      "password": "userpassword"
-    },
-    {
-      "host_url": "https://localhost:8080",
-      "org": "customer1",
-      "env": "test",
-      "server_friendly_name": "Onpremise-Sever001-DC1",
-      "username": "username",
-      "use_proxy_filter": true,
-      "password": "password"
-    }
-  ],
+   "connection_details": [
+      {
+        "host_url": "https://localhost:8080",
+        "org": "customer1",
+        "env": "test",
+        "server_friendly_name": "ONPrem-Apigee",
+        "username": "username",
+        "use_proxy_filter": false,
+        "is_password_encoded": false,
+        "password": "password"
+      }
+    ],
   
-  "enable_BiQ": false,
-  "analytics_details":[
-    {
-      "analytics_endpoint":"https://analytics.api.appdynamics.com",
-      "schema_name":"apigee_metrics",
-      "proxy_url":"",
-      "proxy_port":"",
-      "global_account_name":"customer1_GUID",
-      "analytics_key":"Generated analytics key",
-      "connection_timeout_seconds": 30
-    }
-  ]
-}
+    "enable_BiQ": false,
+    "analytics_details":[
+      {
+        "analytics_endpoint":"https://analytics.api.appdynamics.com",
+        "schema_name":"apigee_metrics",
+        "proxy_url":"",
+        "proxy_port":"",
+        "global_account_name":"customer1_GUID",
+        "analytics_key":"Generated analytics key",
+        "connection_timeout_seconds": 30
+      }
+    ]
+  }

@@ -331,7 +331,7 @@ done <"${proxy_conf_file_path}"
 #remove the last comma in the line with sed                      and the last whitespace
 apiproxy_names=$(echo "${apiproxy_names}" | sed 's/\(.*\),/\1 /' | awk '{$1=$1}1')
 
-echo "==> Will use the following proxies if 'use_proxy_filter' is set to true in the config.json file : ${apiproxy_names}"
+echo "==> Will use the following proxies if 'use_proxy_filter' is set to true in the config.json file :- ${apiproxy_names}"
 
 
 #Set Metric Prefix from config
