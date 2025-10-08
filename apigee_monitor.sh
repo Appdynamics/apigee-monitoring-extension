@@ -736,7 +736,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                     | [$identifier | gsub("( ? )"; ""), ($fivezerotwo_count | add)] | @tsv
                   ' <${fivezerotwo_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' >jq_processed_502_response.out
 
-          found_502 ="true"
+          found_502="true"
 
           #502 BiQ Processor
           JSONProccessor ${fivezerotwo_curl_output} biq_502_raw.json
@@ -788,7 +788,7 @@ for row in $(cat ${apigee_conf_file} | jq -r ' .connection_details[] | @base64')
                     | [$identifier | gsub("( ? )"; ""), ($fivezerothree_count | add)] | @tsv
                   ' <${fivezerothree_curl_output} | sed 's/[][]//g;/^$/d;s/^[ \t]*//;s/[ \t]*$//' >jq_processed_503_response.out
 
-          found_503 ="true"
+          found_503="true"
 
           #503 BiQ Processor
           JSONProccessor ${fivezerothree_curl_output} biq_503_raw.json
